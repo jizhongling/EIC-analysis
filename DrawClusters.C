@@ -1,56 +1,33 @@
-void DrawClusters()
+void DrawClusters(const char *particle = "gamma")
 {
+  const vector<Double_t> v_energy{0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60};
+  const Double_t theta_min = 15;
+  const Double_t theta_max = 35;
+
   const Int_t ntype = 4;
   const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
+
+  auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg.root", particle, theta_min, theta_max));
 
   TCanvas *c[ntype+1];
   TGraphErrors *g_res[ntype];
   for(Int_t it = 0; it <= ntype; it++)
   {
-    c[it] = new TCanvas(Form("c%d", it), Form("c%d", it), 4*600, 2*600);
-    c[it]->Divide(4, 2);
+    c[it] = new TCanvas(Form("c%d", it), Form("c%d", it), 4*600, 3*600);
+    c[it]->Divide(4, 3);
     if(it < ntype)
-      g_res[it] = new TGraphErrors(7);
+      g_res[it] = new TGraphErrors(v_energy.size());
   }
   auto c_res = new TCanvas("c_res", "c_res", 600, 600);
   Int_t ipad = 1;
 
-  for(auto energy : vector<Double_t>{20, 30, 40, 50, 60 ,80, 100})
+  for(auto energy : v_energy)
   {
-    const Double_t theta_min = 15;
-    const Double_t theta_max = 15;
-    const string particle = "gamma";
-
-    TString file_name;
-    const char *data_dir = "/gpfs/mnt/gpfs02/phenix/spin/spin1/phnxsp01/zji/data/eic/endcap";
-    file_name.Form("%s/rec_%s_%gGeV_theta_%g_%gdeg.tree.edm4eic.root", data_dir, particle.c_str(), energy, theta_min, theta_max);
+    string energy_str(Form("%g%s", energy < 1 ? energy*1e3 : energy, energy < 1 ? "MeV" : "GeV"));
 
     TH1 *h_edep[ntype];
     for(Int_t it = 0; it < ntype; it++)
-      h_edep[it] = new TH1F(Form("h_edep_%s_%g", clus_name[it], energy), Form("%g GeV; E [GeV]", energy), 100, energy*0.8, energy*1.2);
-
-    const Int_t max_track = 1000;
-    cout << "Opening " << file_name << endl;
-    auto data_file = new TFile(file_name);
-    auto events = (TTree*)data_file->Get("events");
-    Float_t edep[ntype][max_track];
-    for(Int_t it = 0; it < ntype; it++)
-      events->SetBranchAddress(Form("EcalEndcapP%s.energy", clus_name[it]), (Float_t*)edep[it]);
-
-    for(Long64_t i = 0; i < events->GetEntries(); i++)
-    {
-      events->GetEntry(i);
-      Float_t edep_sum = 0.;
-      for(Int_t it = 0; it < ntype; it++)
-        for(Long64_t j = 0; j < events->GetLeaf(Form("EcalEndcapP%s.energy", clus_name[it]))->GetLen(); j++)
-        {
-          if(it == 0)
-            edep_sum += edep[it][j];
-          else
-            h_edep[it]->Fill(edep[it][j]);
-        }
-      h_edep[0]->Fill(edep_sum);
-    }
+      h_edep[it] = (TH1*)f->Get(Form("h_edep_%s_%s", clus_name[it], energy_str.c_str()));
 
     c[0]->cd(ipad);
     gStyle->SetOptStat(0);
@@ -95,7 +72,6 @@ void DrawClusters()
     }
 
     ipad++;
-    delete data_file;
   }
 
   c_res->cd();
@@ -105,6 +81,7 @@ void DrawClusters()
     c[it+1]->Print(Form("results/clusters-res-%s.pdf", clus_name[it]));
     g_res[it]->SetTitle("Resolution");
     g_res[it]->GetXaxis()->SetTitle("E [GeV]");
+    g_res[it]->GetYaxis()->SetRangeUser(0.035, 0.045);
     g_res[it]->SetMarkerStyle(it+20);
     g_res[it]->SetMarkerColor(it+1);
     g_res[it]->SetMarkerSize(1.6);

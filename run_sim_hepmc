@@ -20,7 +20,7 @@ OUTDIR=$SPIN/data/eic/endcap
 mkdir -p ${OUTDIR}
 
 # Output file names
-compact_file=$EIC_SHELL_PREFIX/../epic/epic.xml
+compact_file=${DETECTOR_PATH}/epic.xml
 info_string="${particle}_${beam_energy}GeV_theta_${theta_min}_${theta_max}deg-$j"
 hepmc_file="${OUTDIR}/gen_${info_string}.hepmc"
 sim_file="${OUTDIR}/sim_${info_string}.edm4hep.root"
@@ -60,4 +60,4 @@ python3 src/tools/default_flags_table/reco_flags.py \
         ${rec_file_no_ext}
 
 # Deleting hepmc_file
-rm ${hepmc_file}
+rm -f ${hepmc_file}
