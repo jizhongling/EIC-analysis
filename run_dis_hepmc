@@ -1,0 +1,53 @@
+#!/bin/bash
+# Usage: run_dis_hepmc <proc>
+set -o errexit
+
+# Input simulation parameters
+eB=(5  5   10  10  18)
+eA=(41 100 100 275 275)
+j=$(( $1 % 10 ))
+k=$(( $1 / 10 ))
+eElectron=${eB[$k]}
+eProton=${eA[$k]}
+Q2min=100
+min_e=$(echo "$eElectron * 0.02" | bc)
+num_events=1000
+physics_list="FTFP_BERT_HP"
+
+OUTDIR=$SPIN/data/eic/endcap
+mkdir -p ${OUTDIR}
+
+# Output file names
+compact_file=../epic/epic_forward_calorimeters.xml
+info_string="pythia8CCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
+hepmc_file="${OUTDIR}/gen_${info_string}.hepmc"
+sim_file="${OUTDIR}/sim_${info_string}.edm4hep.root"
+rec_file_no_ext="${OUTDIR}/rec_${info_string}"
+
+export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
+
+# Generating hepmc file
+pythia8/myepic-eq2 ${hepmc_file} ${eProton} ${eElectron} ${Q2min} ${num_events}
+
+# Running simulation
+cd ../epic
+npsim --runType batch \
+      -v WARNING \
+      --part.minimalKineticEnergy "${min_e}*GeV" \
+      --physics.list "FTFP_BERT_HP" \
+      --physics.rangecut "None" \
+      --numberOfEvents ${num_events} \
+      --compactFile ${compact_file} \
+      --inputFiles ${hepmc_file} \
+      --outputFile ${sim_file}
+
+# Running JANA
+cd ../EICrecon
+python3 src/tools/default_flags_table/reco_flags.py \
+        --nevents ${num_events} \
+        --xml_files ${compact_file} \
+        ${sim_file} \
+        ${rec_file_no_ext}
+
+# Deleting hepmc_file
+#rm -f ${hepmc_file}
