@@ -5,11 +5,11 @@ set -o errexit
 # Input simulation parameters
 eB=(5  5   10  10  18)
 eA=(41 100 100 275 275)
-j=$(( $1 % 10 ))
-k=$(( $1 / 10 ))
+j=$(( $1 % 100 ))
+k=$(( $1 / 100 ))
 eElectron=${eB[$k]}
 eProton=${eA[$k]}
-Q2min=100
+Q2min=1
 min_e=$(echo "$eElectron * 0.02" | bc)
 num_events=1000
 physics_list="FTFP_BERT_HP"
@@ -19,7 +19,7 @@ mkdir -p ${OUTDIR}
 
 # Output file names
 compact_file=../epic/epic_forward_calorimeters.xml
-info_string="pythia8CCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
+info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
 hepmc_file="${OUTDIR}/gen_${info_string}.hepmc"
 sim_file="${OUTDIR}/sim_${info_string}.edm4hep.root"
 rec_file_no_ext="${OUTDIR}/rec_${info_string}"
