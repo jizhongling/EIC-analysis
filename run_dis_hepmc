@@ -21,13 +21,17 @@ mkdir -p ${OUTDIR}
 compact_file=../epic/epic_forward_calorimeters.xml
 info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
 hepmc_file="${OUTDIR}/gen_${info_string}.hepmc"
+abconv_file="${OUTDIR}/abc_${info_string}.hepmc"
+abhist_file="${OUTDIR}/abc_${info_string}.hist.root"
 sim_file="${OUTDIR}/sim_${info_string}.edm4hep.root"
 rec_file_no_ext="${OUTDIR}/rec_${info_string}"
 
 export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Generating hepmc file
-pythia8/myepic-eq2 ${hepmc_file} ${eProton} ${eElectron} ${Q2min} ${num_events}
+./pythia8/myepic-eq2 ${hepmc_file} ${eProton} ${eElectron} ${Q2min} ${num_events}
+abconv ${hepmc_file} -o ${abconv_file%.hepmc} --plot-off
+rm -f ${hepmc_file} ${abhist_file}
 
 # Running simulation
 cd ../epic
@@ -38,7 +42,7 @@ npsim --runType batch \
       --physics.rangecut "None" \
       --numberOfEvents ${num_events} \
       --compactFile ${compact_file} \
-      --inputFiles ${hepmc_file} \
+      --inputFiles ${abconv_file} \
       --outputFile ${sim_file}
 
 # Running JANA
@@ -50,4 +54,4 @@ python3 src/tools/default_flags_table/reco_flags.py \
         ${rec_file_no_ext}
 
 # Deleting hepmc_file
-#rm -f ${hepmc_file}
+#rm -f ${abconv_file}
