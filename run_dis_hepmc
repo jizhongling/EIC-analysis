@@ -26,6 +26,8 @@ abhist_file="${OUTDIR}/abc_${info_string}.hist.root"
 sim_file="${OUTDIR}/sim_${info_string}.edm4hep.root"
 rec_file_no_ext="${OUTDIR}/rec_${info_string}"
 
+export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
+export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../epic/ip6
 export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Generating hepmc file
