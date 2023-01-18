@@ -13,8 +13,8 @@ void AnaSiPM(const Int_t proc)
   for(auto eBeam : v_eBeam)
   {
     f_out->cd();
-    auto h3_ekin = new TH3F(Form("h3_ekin_%gx%g", eBeam.first, eBeam.second), "Kinetic energy of MC particles;eKin (GeV);#theta (degree);PID;", 100,0.,100., 18,0.,90., 4,-0.5,3.5);
-    auto h3_ehit = new TH3F(Form("h3_ehit_%gx%g", eBeam.first, eBeam.second), "Energy deposit in pECal;ehit (GeV);x (mm);y (mm);", 100,0.,100., 161,-2012.5,2012.5, 161,-2012.5,2012.5);
+    auto h3_ekin = new TH3F(Form("h3_ekin_%gx%g", eBeam.first, eBeam.second), "Kinetic energy of MC particles;PID;#theta (degree);eKin (GeV)", 4,-0.5,3.5, 40,0.,40., 100,0.,100.);
+    auto h3_ehit = new TH3F(Form("h3_ehit_%gx%g", eBeam.first, eBeam.second), "Energy deposit in pECal;z (mm);#theta (degree);log10(ehit (GeV))", 17,3425.,3595., 40,0.,40., 100,-3.,2.);
 
     TString file_name;
     file_name.Form("%s/endcap/sim_pythia8NCDIS_%gx%g_minQ2_%g-%d.edm4hep.root", dir_eic, eBeam.first, eBeam.second, Q2min, proc);
@@ -30,7 +30,7 @@ void AnaSiPM(const Int_t proc)
     const Int_t max_track = 10000;
     auto events = (TTree*)data_file->Get("events");
     Int_t pid[max_track] = {}, status[max_track] = {};
-    Float_t pmc[3][max_track], ehit[max_track], pos[2][max_track];
+    Float_t pmc[3][max_track], ehit[max_track], pos[3][max_track];
     events->SetBranchAddress("MCParticles.PDG", (Int_t*)pid);
     events->SetBranchAddress("MCParticles.generatorStatus", (Int_t*)status);
     events->SetBranchAddress("MCParticles.momentum.x", (Float_t*)pmc[0]);
@@ -39,6 +39,7 @@ void AnaSiPM(const Int_t proc)
     events->SetBranchAddress("EcalEndcapPHits.energy", (Float_t*)ehit);
     events->SetBranchAddress("EcalEndcapPHits.position.x", (Float_t*)pos[0]);
     events->SetBranchAddress("EcalEndcapPHits.position.y", (Float_t*)pos[1]);
+    events->SetBranchAddress("EcalEndcapPHits.position.z", (Float_t*)pos[2]);
 
     for(Long64_t iEvent = 0; iEvent < events->GetEntries(); iEvent++)
     {
@@ -67,12 +68,15 @@ void AnaSiPM(const Int_t proc)
           default:
             type = 3;
         }
-        h3_ekin->Fill(eKin, theta, (Double_t)type);
+        h3_ekin->Fill((Double_t)type, theta, eKin);
       } // iMC
       for(Long64_t iHit = 0; iHit < events->GetLeaf("EcalEndcapPHits.energy")->GetLen(); iHit++)
-      {
-        h3_ehit->Fill(ehit[iHit], pos[0][iHit], pos[1][iHit]);
-      } // iHit
+        if(ehit[iHit] > 0.)
+        {
+          TVector3 v3_pos(pos[0][iHit], pos[1][iHit], pos[2][iHit]);
+          Double_t theta = v3_pos.Theta() * 180. / TMath::Pi();
+          h3_ehit->Fill(pos[2][iHit], theta, TMath::Log10(ehit[iHit]));
+        } // iHit
     } // iEvent
 
     data_file->Close();
