@@ -73,11 +73,12 @@ int main(int argc, char *argv[])
   pythia.readString("WeakBosonExchange:ff2ff(t:gmZ) = on");
   // Uncomment to allow charged current
   //pythia.readString("WeakBosonExchange:ff2ff(t:W) = on");
+  pythia.readString("PromptPhoton:all = off");
 
   // Phase-space cut: minimal Q2 of process
   pythia.readString("PhaseSpace:Q2Min = " + Q2min);
-  pythia.readString("PhaseSpace:mHatMin = force 0.1");
-  pythia.readString("PhaseSpace:pTHatMindiverge = force 0.1");
+  pythia.readString("PhaseSpace:mHatMin = 0.1");
+  pythia.readString("PhaseSpace:pTHatMinDiverge = 0.5");
 
   // Set dipole recoil on. Necessary for DIS + shower
   pythia.readString("SpaceShower:dipoleRecoil = on");
@@ -87,19 +88,19 @@ int main(int argc, char *argv[])
   pythia.readString("SpaceShower:pTmaxMatch = 2");
 
   // Input PDF set
-  pythia.readString("PDF:pSet=8");
+  pythia.readString("PDF:pSet = 8");
 
   // QED radiation off lepton not handled yet by the new procedure
   pythia.readString("PDF:lepton = off");
   pythia.readString("TimeShower:QEDshowerByL = off");
 
-  // Hadronization and radiation settings
-  pythia.readString("HadronLevel:Decay = on");
-  pythia.readString("HadronLevel:all = on");
-  pythia.readString("PartonLevel:ISR = on");
+  // Radiation and hadronization settings
+  pythia.readString("PartonLevel:all = on");
   pythia.readString("PartonLevel:MPI = off");
+  pythia.readString("PartonLevel:ISR = on");
   pythia.readString("PartonLevel:FSR = on");
-  pythia.readString("PromptPhoton:all = off");
+  pythia.readString("HadronLevel:all = on");
+  pythia.readString("HadronLevel:Decay = on");
 
   // Initialize
   pythia.init();

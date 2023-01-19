@@ -9,12 +9,12 @@ void AnaSiPM(const Int_t proc)
   const char *dir_eic = "/gpfs/mnt/gpfs02/phenix/spin/spin1/phnxsp01/zji/data/eic";
   auto f_out = new TFile(Form("%s/histos/energy-%d.root", dir_eic, proc), "RECREATE");
 
-  Int_t ifile = 0;
   for(auto eBeam : v_eBeam)
   {
     f_out->cd();
-    auto h3_ekin = new TH3F(Form("h3_ekin_%gx%g", eBeam.first, eBeam.second), "Kinetic energy of MC particles;PID;#theta (degree);eKin (GeV)", 4,-0.5,3.5, 40,0.,40., 100,0.,100.);
-    auto h3_ehit = new TH3F(Form("h3_ehit_%gx%g", eBeam.first, eBeam.second), "Energy deposit in pECal;z (mm);#theta (degree);log10(ehit (GeV))", 17,3425.,3595., 40,0.,40., 100,-3.,2.);
+    auto h3_ekin = new TH3F(Form("h3_ekin_%gx%g", eBeam.first, eBeam.second), "Kinetic energy of MC particles;PID;#theta (degree);E_{kin} (GeV)", 4,-0.5,3.5, 40,0.,40., 100,0.,100.);
+    auto h3_ehit = new TH3F(Form("h3_ehit_%gx%g", eBeam.first, eBeam.second), "Energy deposit in pECal;z (mm);#theta (degree);log_{10}(E_{hit} (GeV))", 17,3425.,3595., 40,0.,40., 100,-3.,2.);
+    auto h2_ehit = new TH2F(Form("h2_ehit_%gx%g", eBeam.first, eBeam.second), "Energy weight in pECal;z (mm);#theta (degree)", 17,3425.,3595., 40,0.,40.);
 
     TString file_name;
     file_name.Form("%s/endcap/sim_pythia8NCDIS_%gx%g_minQ2_%g-%d.edm4hep.root", dir_eic, eBeam.first, eBeam.second, Q2min, proc);
@@ -76,6 +76,7 @@ void AnaSiPM(const Int_t proc)
           TVector3 v3_pos(pos[0][iHit], pos[1][iHit], pos[2][iHit]);
           Double_t theta = v3_pos.Theta() * 180. / TMath::Pi();
           h3_ehit->Fill(pos[2][iHit], theta, TMath::Log10(ehit[iHit]));
+          h2_ehit->Fill(pos[2][iHit], theta, ehit[iHit]);
         } // iHit
     } // iEvent
 
