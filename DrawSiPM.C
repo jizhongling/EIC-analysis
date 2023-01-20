@@ -32,8 +32,31 @@ void DrawSiPM()
 
     c0->cd(ipad++);
     auto h_ehit_seg = h2_ehit_seg->ProjectionX("h_ehit_seg");
-    h_ehit_seg->SetTitle("#sum E_{hit} vs z");
+    h_ehit_seg->Scale(100./h_ehit_seg->Integral(0,-1));
+    h_ehit_seg->SetTitle("Energy percent in each layer");
+    h_ehit_seg->GetYaxis()->SetTitle("Energy percent (%)");
     h_ehit_seg->DrawCopy("HIST");
+
+    c0->cd(ipad++);
+    auto g_ehit_cum = new TGraphErrors(17);
+    Double_t tot, etot;
+    tot = h_ehit_seg->IntegralAndError(0,-1, etot);
+    for(Int_t iLayer = 0; iLayer < 17; iLayer++)
+    {
+      Double_t cum, ecum;
+      cum = h_ehit_seg->IntegralAndError(1,1+iLayer, ecum);
+      Double_t frac = cum / tot;
+      Double_t efrac = frac * sqrt(ecum*ecum/cum/cum + etot*etot/tot/tot);
+      g_ehit_cum->SetPoint(iLayer, 0.5+iLayer, frac);
+      g_ehit_cum->SetPointError(iLayer, 0.5, efrac);
+    }
+    g_ehit_cum->SetTitle("Cumalative energy vs length");
+    g_ehit_cum->GetXaxis()->SetTitle("Length (cm)");
+    g_ehit_cum->GetYaxis()->SetTitle("Energy fraction");
+    g_ehit_cum->SetMarkerStyle(20);
+    g_ehit_cum->SetMarkerColor(2);
+    g_ehit_cum->SetMarkerSize(1.2);
+    g_ehit_cum->Draw("APC");
 
     for(Int_t iTheta = 0; iTheta < 6; iTheta++)
     {
