@@ -8,8 +8,8 @@ void DrawSiPM()
   auto f_seg = TFile::Open("results/energy-SiPM-seg.root");
   auto f_noseg = TFile::Open("results/energy-SiPM-noseg.root");
 
-  auto c0 = new TCanvas("c0", "c0", 4*600, 3*600);
-  c0->Divide(4, 3);
+  auto c0 = new TCanvas("c0", "c0", 4*600, 4*600);
+  c0->Divide(4, 4);
   gStyle->SetOptStat(0);
 
   for(auto eBeam : v_eBeam)
@@ -19,6 +19,15 @@ void DrawSiPM()
     auto h3_ekin = (TH3*)f_seg->Get(Form("h3_ekin_%gx%g", eBeam.first, eBeam.second));
     auto h2_ehit_seg = (TH2*)f_seg->Get(Form("h2_ehit_%gx%g", eBeam.first, eBeam.second));
     auto h3_ehit_noseg = (TH3*)f_noseg->Get(Form("h3_ehit_%gx%g", eBeam.first, eBeam.second));
+
+    for(Int_t type = 0; type < 4; type++)
+    {
+      c0->cd(ipad++);
+      gPad->SetLogy();
+      auto h_ekin = h3_ekin->ProjectionZ("h_ekin", 1+type,1+type, 6,35);
+      h_ekin->SetTitle(Form("eP: %gx%g GeV, E_{kin}^{MC} for %s", eBeam.first, eBeam.second, particle[type]));
+      h_ekin->DrawCopy("HIST");
+    }
 
     for(Int_t type = 0; type < 4; type++)
     {
