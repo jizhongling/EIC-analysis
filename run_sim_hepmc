@@ -28,7 +28,7 @@ rec_file_no_ext="${OUTDIR}/rec_${info_string}"
 
 export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
 export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../epic/ip6
-export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
+#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Generating hepmc file
 root -l -b -q "./hepmc_generation/gen_particles.cxx+(\
