@@ -1,10 +1,12 @@
 void DrawSiPM()
 {
   typedef pair<Double_t, Double_t> eBeam_t;
-  const vector<eBeam_t> v_eBeam{{5,41}, {5,100}, {10,100}, {10,275}, {18,275}};
-  const Double_t Q2min = 1;
+  //const vector<eBeam_t> v_eBeam{{5,41}, {5,100}, {10,100}, {10,275}, {18,275}};
+  const vector<eBeam_t> v_eBeam{{18,275}};
 
+  const double n_pythia = 100.;
   const char *particle[4] = {"#gamma", "e^{#pm}", "#pi^{#pm}", "others"};
+  auto f_pythia = TFile::Open("results/energy-SiPM-pythia8.root");
   auto f_seg = TFile::Open("results/energy-SiPM-seg.root");
   auto f_noseg = TFile::Open("results/energy-SiPM-noseg.root");
 
@@ -16,27 +18,34 @@ void DrawSiPM()
   {
     Int_t ipad = 1;
 
-    auto h3_ekin = (TH3*)f_seg->Get(Form("h3_ekin_%gx%g", eBeam.first, eBeam.second));
+    auto h3_xsec = (TH3*)f_pythia->Get(Form("h3_xsec_%gx%g", eBeam.first, eBeam.second));
     auto h2_ehit_seg = (TH2*)f_seg->Get(Form("h2_ehit_%gx%g", eBeam.first, eBeam.second));
     auto h3_ehit_noseg = (TH3*)f_noseg->Get(Form("h3_ehit_%gx%g", eBeam.first, eBeam.second));
+
+    h3_xsec->Scale(1./n_pythia);
 
     for(Int_t type = 0; type < 4; type++)
     {
       c0->cd(ipad++);
       gPad->SetLogy();
-      auto h_ekin = h3_ekin->ProjectionZ("h_ekin", 1+type,1+type, 6,35);
-      h_ekin->SetTitle(Form("eP: %gx%g GeV, E_{kin}^{MC} for %s", eBeam.first, eBeam.second, particle[type]));
+      auto h_ekin = h3_xsec->ProjectionZ("h_ekin", 1+type,1+type, 16,35);
+      h_ekin->Scale(1./0.4);
+      h_ekin->SetTitle(Form("eP: %gx%g GeV, #eta: 1.3--1.7, %s", eBeam.first, eBeam.second, particle[type]));
+      h_ekin->GetYaxis()->SetTitle("d#sigma/(dEd#eta) (fb/GB)");
+      h_ekin->GetXaxis()->SetRangeUser(2.,100.);
       h_ekin->DrawCopy("HIST");
     }
 
     for(Int_t type = 0; type < 4; type++)
     {
       c0->cd(ipad++);
-      h3_ekin->GetXaxis()->SetRange(1+type,1+type);
-      h3_ekin->GetZaxis()->SetRangeUser(0.,10.);
-      auto h2_ekin_theta = h3_ekin->Project3D("zy");
-      h2_ekin_theta->SetTitle(Form("eP: %gx%g GeV, E_{kin}^{MC} for %s", eBeam.first, eBeam.second, particle[type]));
-      h2_ekin_theta->DrawCopy("CONT1");
+      gPad->SetLogz();
+      h3_xsec->GetXaxis()->SetRange(1+type,1+type);
+      auto h2_ekin_eta = h3_xsec->Project3D("yz");
+      h2_ekin_eta->Scale(1./0.02);
+      h2_ekin_eta->SetTitle(Form("COLZ: d#sigma/(dEd#eta) (fb/GB), %s", particle[type]));
+      h2_ekin_eta->GetXaxis()->SetRangeUser(2.,100.);
+      h2_ekin_eta->DrawCopy("COLZ");
     }
 
     c0->cd(ipad++);

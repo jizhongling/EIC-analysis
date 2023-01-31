@@ -1,0 +1,23 @@
+#!/bin/bash
+# Usage: run_dis_histo <proc>
+set -o errexit
+
+# Input simulation parameters
+eB=(5  5   10  10  18)
+eA=(41 100 100 275 275)
+j=$(( $1 % 100 ))
+k=4 #$(( $1 / 100 ))
+eElectron=${eB[$k]}
+eProton=${eA[$k]}
+Q2min=10
+num_events=50000000
+
+OUTDIR=$SPIN/data/eic/histos
+mkdir -p ${OUTDIR}
+
+# Output file names
+info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
+histo_file="${OUTDIR}/${info_string}.root"
+
+# Generating histo file
+./pythia8/myepic-edist ${histo_file} ${eProton} ${eElectron} ${Q2min} ${num_events}
