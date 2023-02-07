@@ -8,8 +8,7 @@ void AnaClustersForSiPM(const Int_t proc, const char *particle)
   const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
 
   const char *dir_eic = "/gpfs/mnt/gpfs02/phenix/spin/spin1/phnxsp01/zji/data/eic";
-  //auto f_out = new TFile(Form("%s/histos/clus_%s_theta_%g_%gdeg-%d.root", dir_eic, particle, theta_min, theta_max, proc), "RECREATE");
-  auto f_out = new TFile(Form("histos/clus_%s_theta_%g_%gdeg-%d.root", particle, theta_min, theta_max, proc), "RECREATE");
+  auto f_out = new TFile(Form("%s/histos/clus_%s_theta_%g_%gdeg-%d.root", dir_eic, particle, theta_min, theta_max, proc), "RECREATE");
 
   for(auto energy : v_energy)
   {
@@ -18,10 +17,10 @@ void AnaClustersForSiPM(const Int_t proc, const char *particle)
     f_out->cd();
     TH2 *h2_edep[ntype];
     for(Int_t it = 0; it < ntype; it++)
-      h2_edep[it] = new TH2F(Form("h2_edep_%s_%s", clus_name[it], energy_str.c_str()), Form("%s; E [GeV]", energy_str.c_str()), 100,energy*0.1,energy*1.1, 20,theta_min,theta_max);
+      h2_edep[it] = new TH2F(Form("h2_edep_%s_%s", clus_name[it], energy_str.c_str()), Form("%s; E [GeV];#theta", energy_str.c_str()), 100,energy*0.1,energy*1.1, 20,theta_min,theta_max);
 
     TString file_name;
-    file_name.Form("%s/endcap/rec_%s_%s_theta_20_35deg-%d.tree.edm4eic.root", dir_eic, particle, energy_str.c_str(), proc);
+    file_name.Form("%s/endcap/rec_%s_%s_theta_%g_%gdeg-%d.tree.edm4eic.root", dir_eic, particle, energy_str.c_str(), theta_min, theta_max, proc);
 
     const Int_t max_track = 1000;
     TFile *data_file = TFile::Open(file_name);
@@ -47,16 +46,21 @@ void AnaClustersForSiPM(const Int_t proc, const char *particle)
       Double_t theta = v3_pmc.Theta() * 180. / TMath::Pi();
       if( theta < theta_min || theta > theta_max )
         continue;
-      Float_t edep_sum = 0.;
+      Float_t edep_max = 0.;
       for(Int_t it = 0; it < ntype; it++)
         for(Long64_t j = 0; j < events->GetLeaf(Form("EcalEndcapP%s.energy", clus_name[it]))->GetLen(); j++)
         {
           if(it == 0)
-            edep_sum += edep[it][j];
+          {
+            if(edep[it][j] > edep_max)
+              edep_max = edep[it][j];
+          }
           else
+          {
             h2_edep[it]->Fill(edep[it][j], theta);
+          }
         }
-      h2_edep[0]->Fill(edep_sum, theta);
+      h2_edep[0]->Fill(edep_max, theta);
     }
 
     data_file->Close();

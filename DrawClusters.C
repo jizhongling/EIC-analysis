@@ -47,7 +47,7 @@ void DrawClusters(const char *particle = "gamma")
       auto f_gaus = new TF1("f_gaus", "gaus", energy*0.8, energy*1.2);
       f_gaus->SetParameter(0, h_edep[it]->GetMaximum());
       f_gaus->SetParameter(1, energy);
-      f_gaus->SetParameter(2, 0.03*energy);
+      f_gaus->SetParameter(2, energy*0.03);
       f_gaus->SetLineColor(kRed);
       f_gaus->SetLineWidth(1);
       h_edep[it]->Fit(f_gaus, "RQ0");

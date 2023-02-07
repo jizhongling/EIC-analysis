@@ -1,8 +1,7 @@
 void DrawSiPM()
 {
   typedef pair<Double_t, Double_t> eBeam_t;
-  //const vector<eBeam_t> v_eBeam{{5,41}, {5,100}, {10,100}, {10,275}, {18,275}};
-  const vector<eBeam_t> v_eBeam{{18,275}};
+  const vector<eBeam_t> v_eBeam{{5,41}, {5,100}, {10,100}, {10,275}, {18,275}};
 
   const double n_pythia = 100.;
   const char *particle[4] = {"#gamma", "e^{#pm}", "#pi^{#pm}", "others"};
