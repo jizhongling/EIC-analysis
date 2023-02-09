@@ -1,8 +1,8 @@
 void AnaClustersForSiPM(const Int_t proc, const char *particle)
 {
   const vector<Double_t> v_energy{65, 70, 80, 90, 100};
-  const Double_t theta_min = 15;
-  const Double_t theta_max = 35;
+  const Double_t theta_min = 4;
+  const Double_t theta_max = 15;
 
   const Int_t ntype = 4;
   const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
@@ -17,7 +17,11 @@ void AnaClustersForSiPM(const Int_t proc, const char *particle)
     f_out->cd();
     TH2 *h2_edep[ntype];
     for(Int_t it = 0; it < ntype; it++)
-      h2_edep[it] = new TH2F(Form("h2_edep_%s_%s", clus_name[it], energy_str.c_str()), Form("%s; E [GeV];#theta", energy_str.c_str()), 100,energy*0.1,energy*1.1, 20,theta_min,theta_max);
+      h2_edep[it] = new TH2F(
+          Form("h2_edep_%s_%s", clus_name[it], energy_str.c_str()),
+          Form("%s;E [GeV];#theta", energy_str.c_str()),
+          100, energy*0.1, energy*1.1,
+          static_cast<Int_t>(theta_max - theta_min), theta_min, theta_max);
 
     TString file_name;
     file_name.Form("%s/endcap/rec_%s_%s_theta_%g_%gdeg-%d.tree.edm4eic.root", dir_eic, particle, energy_str.c_str(), theta_min, theta_max, proc);

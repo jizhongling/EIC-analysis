@@ -1,10 +1,12 @@
 void DrawClustersForSiPM(const char *particle = "pi0")
 {
   const vector<Double_t> v_energy{65, 70, 80, 90, 100};
-  const Double_t theta_min = 15;
-  const Double_t theta_max = 35;
+  const Double_t theta_min = 4;
+  const Double_t theta_max = 15;
 
-  const Int_t ntheta = 4;
+  const Int_t dtheta = 2;
+  const Int_t ntheta = 5;
+
   const Int_t ntype = 4;
   const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
 
@@ -36,7 +38,7 @@ void DrawClustersForSiPM(const char *particle = "pi0")
     for(Int_t it = ntype-1; it >= 0; it--)
     {
       auto h_edep = (TH1*)h2_edep[it]->ProjectionX("h_edep")->Clone(Form("h_edep_%d", it));
-      h_edep->SetTitle(Form("E_{truth} = %s, #theta = 15^{#circ} -- 35^{#circ}", energy_str.c_str()));
+      h_edep->SetTitle(Form("E_{truth} = %s, #theta = %g^{#circ} -- %g^{#circ}", energy_str.c_str(), theta_min, theta_max));
       h_edep->SetLineColor(it + 1);
       h_edep->DrawCopy(it==ntype-1 ? "HIST" : "HIST SAME");
       leg0->AddEntry(h_edep, clus_name[it], "L");
@@ -50,8 +52,8 @@ void DrawClustersForSiPM(const char *particle = "pi0")
     for(Int_t ith = 0; ith < ntheta; ith++)
     {
       c[ith+2]->cd(ipad);
-      auto h_edep = (TH1*)h2_edep[0]->ProjectionX("h_edep_theta", 1+ith*5, 5+ith*5)->Clone(Form("h_edep_theta_%d", ith));
-      h_edep->SetTitle(Form("E_{truth} = %s, #theta = %d^{#circ} -- %d^{#circ}", energy_str.c_str(), 15+ith*5, 20+ith*5));
+      auto h_edep = (TH1*)h2_edep[0]->ProjectionX("h_edep_theta", 1+ith*dtheta, dtheta+ith*dtheta)->Clone(Form("h_edep_theta_%d", ith));
+      h_edep->SetTitle(Form("E_{truth} = %s, #theta = %g^{#circ} -- %g^{#circ}", energy_str.c_str(), theta_min+ith*dtheta, theta_min+dtheta+ith*dtheta));
       gStyle->SetOptFit(1111);
       auto f_gaus = new TF1("f_gaus", "gaus", energy*0.1, energy*1.1);
       f_gaus->SetParameter(0, h_edep->GetMaximum());
@@ -87,7 +89,7 @@ void DrawClustersForSiPM(const char *particle = "pi0")
   auto leg_rec = new TLegend;
   for(Int_t ith = 0; ith < ntheta; ith++)
   {
-    c[ith+2]->Print(Form("results/energy-SiPM-res-Clusters-theta_%d_%d.pdf", 15+ith*5, 20+ith*5));
+    c[ith+2]->Print(Form("results/energy-SiPM-maxhit-res-theta_%g_%gdeg.pdf", theta_min+ith*dtheta, theta_min+dtheta+ith*dtheta));
     g_rec[ith]->SetTitle("E_{rec}/E_{truth}");
     g_rec[ith]->GetXaxis()->SetTitle("E [GeV]");
     g_rec[ith]->GetYaxis()->SetTitle("E_{rec}/E_{truth}");
@@ -96,11 +98,11 @@ void DrawClustersForSiPM(const char *particle = "pi0")
     g_rec[ith]->SetMarkerColor(ith+1);
     g_rec[ith]->SetMarkerSize(1.6);
     g_rec[ith]->Draw(ith==0 ? "AP" : "P");
-    leg_rec->AddEntry(g_rec[ith], Form("#theta: %d -- %d", 15+ith*5, 20+ith*5), "PE");
+    leg_rec->AddEntry(g_rec[ith], Form("#theta: %g -- %g", theta_min+ith*dtheta, theta_min+dtheta+ith*dtheta), "PE");
   }
   leg_rec->Draw();
 
-  c[0]->Print("results/energy-SiPM-rec.pdf");
-  c[1]->Print("results/energy-SiPM-rec2D.pdf");
-  c_rec->Print("results/energy-SiPM-ratio.pdf");
+  c[0]->Print(Form("results/energy-SiPM-all-rec-theta_%g_%gdeg.pdf", theta_min, theta_max));
+  c[1]->Print(Form("results/energy-SiPM-maxhit-rec2D-theta_%g_%gdeg.pdf", theta_min, theta_max));
+  c_rec->Print(Form("results/energy-SiPM-maxhit-ratio-theta_%g_%gdeg.pdf", theta_min, theta_max));
 }
