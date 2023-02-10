@@ -65,10 +65,10 @@ void DrawClustersForSiPM(const char *particle = "pi0")
       h_edep->DrawCopy();
       f_gaus->DrawCopy("SAME");
 
-      Double_t mean = f_gaus->GetParameter(1);
-      Double_t sigma = f_gaus->GetParameter(2);
-      Double_t emean = f_gaus->GetParError(1);
-      Double_t esigma = f_gaus->GetParError(2);
+      Double_t mean = h_edep->GetMean(); //f_gaus->GetParameter(1);
+      Double_t sigma = h_edep->GetStdDev(); //f_gaus->GetParameter(2);
+      Double_t emean = h_edep->GetMeanError(); //f_gaus->GetParError(1);
+      Double_t esigma = h_edep->GetStdDevError(); //f_gaus->GetParError(2);
       Double_t res = sigma/mean;
       Double_t eres = res * sqrt(emean*emean/mean/mean + esigma*esigma/sigma/sigma);
 
@@ -78,8 +78,8 @@ void DrawClustersForSiPM(const char *particle = "pi0")
       res_caption.SetNDC(kTRUE);
       res_caption.DrawLatex(.15, .8, Form("Res = %0.5f", res));
 
-      g_rec[ith]->SetPoint(ipad-1, energy, mean/energy);
-      g_rec[ith]->SetPointError(ipad-1, 0., sigma/energy);
+      g_rec[ith]->SetPoint(ipad-1, energy, mean * 1000.);
+      g_rec[ith]->SetPointError(ipad-1, 0., sigma * 2000.);
     }
 
     ipad++;
@@ -90,10 +90,9 @@ void DrawClustersForSiPM(const char *particle = "pi0")
   for(Int_t ith = 0; ith < ntheta; ith++)
   {
     c[ith+2]->Print(Form("results/energy-SiPM-maxhit-res-theta_%g_%gdeg.pdf", theta_min+ith*dtheta, theta_min+dtheta+ith*dtheta));
-    g_rec[ith]->SetTitle("E_{rec}/E_{truth}");
+    g_rec[ith]->SetTitle("Light yield");
     g_rec[ith]->GetXaxis()->SetTitle("E [GeV]");
-    g_rec[ith]->GetYaxis()->SetTitle("E_{rec}/E_{truth}");
-    g_rec[ith]->GetYaxis()->SetRangeUser(0.1, 0.7);
+    g_rec[ith]->GetYaxis()->SetTitle("Light yield");
     g_rec[ith]->SetMarkerStyle(ith+20);
     g_rec[ith]->SetMarkerColor(ith+1);
     g_rec[ith]->SetMarkerSize(1.6);
@@ -104,5 +103,5 @@ void DrawClustersForSiPM(const char *particle = "pi0")
 
   c[0]->Print(Form("results/energy-SiPM-all-rec-theta_%g_%gdeg.pdf", theta_min, theta_max));
   c[1]->Print(Form("results/energy-SiPM-maxhit-rec2D-theta_%g_%gdeg.pdf", theta_min, theta_max));
-  c_rec->Print(Form("results/energy-SiPM-maxhit-ratio-theta_%g_%gdeg.pdf", theta_min, theta_max));
+  c_rec->Print(Form("results/energy-SiPM-maxhit-yield-theta_%g_%gdeg.pdf", theta_min, theta_max));
 }
