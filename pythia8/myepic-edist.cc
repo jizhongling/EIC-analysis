@@ -98,13 +98,25 @@ int main(int argc, char *argv[])
   pythia.readString("HadronLevel:Decay = on");
 
   // Kinematic cuts
-  const Double_t ekin_min = 2.;
+  const Double_t mom_bin = 1.;
+  const Double_t mom_min = 2.;
+  const Double_t mom_max = 200.;
+
+  const Double_t eta_bin = 0.02;
   const Double_t eta_min = 1.;
   const Double_t eta_max = 4.;
 
+  const Int_t mom_nbins = static_cast<Int_t>( (mom_max - mom_min) / mom_bin );
+  const Int_t eta_nbins = static_cast<Int_t>( (eta_max - eta_min) / eta_bin );
+  const Int_t ntypes = 5;
+
   // Output file
   auto f_out = new TFile(argv[1], "RECREATE");
-  auto h3_xsec = new TH3F(("h3_xsec_"+eElectron+"x"+eProton).c_str(), "Cross section (fb);PID;#eta;eKin (GeV)", 4,-0.5,3.5, 150,eta_min,eta_max, 100,0.,100.);
+  auto h3_xsec = new TH3F(("h3_xsec_" + eElectron + "x" + eProton).c_str(),
+      "Cross section (fb);PID;#eta;p (GeV)",
+      ntypes, -0.5, ntypes - 0.5,
+      eta_nbins, eta_min, eta_max,
+      mom_nbins, mom_min, mom_max);
 
   // Initialize
   pythia.init();
@@ -117,31 +129,35 @@ int main(int argc, char *argv[])
     // Particle loop
     for (int iPar = 5; iPar < pythia.event.size(); iPar++)
     {
-      Double_t ekin = pythia.event[iPar].pAbs();
-      Double_t eta = pythia.event[iPar].eta();
+      const Particle &part = pythia.event[iPar];
+      Double_t mom = part.pAbs();
+      Double_t eta = part.eta();
 
-      if (!pythia.event[iPar].isFinal() ||
-          ekin < ekin_min ||
+      if (!(part.isFinal() || part.id() == 111) ||
+          mom < mom_min || mom > mom_max ||
           eta < eta_min || eta > eta_max)
         continue;
 
       Double_t type = -1;
-      switch(pythia.event[iPar].idAbs())
+      switch(part.idAbs())
       {
-        case 22:
+        case 11:
           type = 0;
           break;
-        case 11:
+        case 22:
           type = 1;
           break;
-        case 211:
+        case 111:
           type = 2;
           break;
-        default:
+        case 211:
           type = 3;
+          break;
+        default:
+          type = 4;
       }
 
-      h3_xsec->Fill(type, eta, ekin);
+      h3_xsec->Fill(type, eta, mom);
     } // End of particle loop
   } // End of event loop
 

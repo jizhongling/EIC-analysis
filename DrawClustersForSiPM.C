@@ -89,7 +89,7 @@ void DrawClustersForSiPM(const char *particle = "pi0")
   auto leg_rec = new TLegend;
   for(Int_t ith = 0; ith < ntheta; ith++)
   {
-    c[ith+2]->Print(Form("results/energy-SiPM-maxhit-res-theta_%g_%gdeg.pdf", theta_min+ith*dtheta, theta_min+dtheta+ith*dtheta));
+    //c[ith+2]->Print(Form("results/energy-SiPM-maxhit-res-theta_%g_%gdeg.pdf", theta_min+ith*dtheta, theta_min+dtheta+ith*dtheta));
     g_rec[ith]->SetTitle("Light yield");
     g_rec[ith]->GetXaxis()->SetTitle("E [GeV]");
     g_rec[ith]->GetYaxis()->SetTitle("Light yield");
@@ -102,6 +102,6 @@ void DrawClustersForSiPM(const char *particle = "pi0")
   leg_rec->Draw();
 
   c[0]->Print(Form("results/energy-SiPM-all-rec-theta_%g_%gdeg.pdf", theta_min, theta_max));
-  c[1]->Print(Form("results/energy-SiPM-maxhit-rec2D-theta_%g_%gdeg.pdf", theta_min, theta_max));
+  //c[1]->Print(Form("results/energy-SiPM-maxhit-rec2D-theta_%g_%gdeg.pdf", theta_min, theta_max));
   c_rec->Print(Form("results/energy-SiPM-maxhit-yield-theta_%g_%gdeg.pdf", theta_min, theta_max));
 }

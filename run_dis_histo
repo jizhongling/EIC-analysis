@@ -5,8 +5,8 @@ set -o errexit
 # Input simulation parameters
 eB=(5  5   10  10  18)
 eA=(41 100 100 275 275)
-j=$(( $1 % 100 ))
-k=4 #$(( $1 / 100 ))
+j=$1 #$(( $1 % 100 ))
+k=4  #$(( $1 / 100 ))
 eElectron=${eB[$k]}
 eProton=${eA[$k]}
 Q2min=10
