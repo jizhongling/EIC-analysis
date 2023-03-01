@@ -15,19 +15,21 @@ num_events=1000
 physics_list="FTFP_BERT_HP"
 
 OUTDIR=$SPIN/data/eic/endcap
-mkdir -p ${OUTDIR}
+WRKDIR=${OUTDIR}
+#WRKDIR=${_CONDOR_SCRATCH_DIR}
+mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=../epic/epic_forward_calorimeters.xml
+compact_file=../epic/epic_full.xml
 info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
-hepmc_file="${OUTDIR}/gen_${info_string}.hepmc"
-abconv_file="${OUTDIR}/abc_${info_string}.hepmc"
-abhist_file="${OUTDIR}/abc_${info_string}.hist.root"
-sim_file="${OUTDIR}/sim_${info_string}.edm4hep.root"
+hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
+abconv_file="${WRKDIR}/abc_${info_string}.hepmc"
+abhist_file="${WRKDIR}/abc_${info_string}.hist.root"
+sim_file="${WRKDIR}/sim_${info_string}.edm4hep.root"
 rec_file_no_ext="${OUTDIR}/rec_${info_string}"
 
 export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
-export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../epic/ip6
+export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
 #export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Generating hepmc file
@@ -49,11 +51,20 @@ npsim --runType batch \
 
 # Running JANA
 cd ../EICrecon
-python3 src/tools/default_flags_table/reco_flags.py \
-        --nevents ${num_events} \
-        --xml_files ${compact_file} \
-        ${sim_file} \
-        ${rec_file_no_ext}
+eicrecon -Pjana:debug_plugin_loading=1 \
+         -Pjana:nevents=${num_events} \
+         -Pacts:MaterialMap=calibrations/materials-map.cbor \
+         -Pdd4hep:xml_files=${compact_file} \
+         -PBEMC:EcalBarrelScFiRawHits:signalSumFields="" \
+         -Ppodio:output_file=${rec_file_no_ext}.tree.edm4eic.root \
+         -Phistsfile=${rec_file_no_ext}.ana.root \
+         ${sim_file}
+
+#python3 ../analysis/attic/reco_flags.py \
+#        --nevents ${num_events} \
+#        --xml_files ${compact_file} \
+#        ${sim_file} \
+#        ${rec_file_no_ext}
 
 # Deleting hepmc_file
-#rm -f ${abconv_file}
+rm -f ${abconv_file}

@@ -2,7 +2,7 @@ void DrawClusters(const char *particle = "gamma")
 {
   const vector<Double_t> v_energy{0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60};
   const Double_t theta_min = 15;
-  const Double_t theta_max = 35;
+  const Double_t theta_max = 25;
 
   const Int_t ntype = 4;
   const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
@@ -81,7 +81,7 @@ void DrawClusters(const char *particle = "gamma")
     c[it+1]->Print(Form("results/clusters-res-%s.pdf", clus_name[it]));
     g_res[it]->SetTitle("Resolution");
     g_res[it]->GetXaxis()->SetTitle("E [GeV]");
-    g_res[it]->GetYaxis()->SetRangeUser(0.035, 0.045);
+    g_res[it]->GetYaxis()->SetRangeUser(0.030, 0.045);
     g_res[it]->SetMarkerStyle(it+20);
     g_res[it]->SetMarkerColor(it+1);
     g_res[it]->SetMarkerSize(1.6);
