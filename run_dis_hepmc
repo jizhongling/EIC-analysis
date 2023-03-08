@@ -2,6 +2,12 @@
 # Usage: run_dis_hepmc <proc>
 set -o errexit
 
+# Setup environment
+export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
+export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
+#export JANA_HOME=$EIC_SHELL_PREFIX
+#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
+
 # Input simulation parameters
 eB=(5  5   10  10  18)
 eA=(41 100 100 275 275)
@@ -20,17 +26,13 @@ WRKDIR=${OUTDIR}
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=../epic/epic_full.xml
+compact_file=${DETECTOR_PATH}/epic_full.xml
 info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
 hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
 abconv_file="${WRKDIR}/abc_${info_string}.hepmc"
 abhist_file="${WRKDIR}/abc_${info_string}.hist.root"
 sim_file="${WRKDIR}/sim_${info_string}.edm4hep.root"
 rec_file_no_ext="${OUTDIR}/rec_${info_string}"
-
-export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
-export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
-#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Generating hepmc file
 ./pythia8/myepic-eq2 ${hepmc_file} ${eProton} ${eElectron} ${Q2min} ${num_events}

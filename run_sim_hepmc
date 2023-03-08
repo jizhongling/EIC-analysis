@@ -2,6 +2,12 @@
 # Usage: run_sim_hepmc <proc> <particle>
 set -o errexit
 
+# Setup environment
+export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
+export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
+#export JANA_HOME=$EIC_SHELL_PREFIX
+#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
+
 # Input simulation parameters
 particle="$2"
 energies=(0.1 0.2 0.5 1 2 5 10 20 40 60)
@@ -23,15 +29,11 @@ WRKDIR=${OUTDIR}
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=${DETECTOR_PATH}/epic_calorimeters.xml
+compact_file=${DETECTOR_PATH}/epic_pecal.xml
 info_string="${particle}_${beam_energy}GeV_theta_${theta_min}_${theta_max}deg-$j"
 hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
 sim_file="${WRKDIR}/sim_${info_string}.edm4hep.root"
 rec_file_no_ext="${OUTDIR}/rec_${info_string}"
-
-export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
-export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
-#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Generating hepmc file
 root -l -b -q "./hepmc_generation/gen_particles.cxx+(\
