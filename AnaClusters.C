@@ -17,10 +17,10 @@ void AnaClusters(const Int_t proc, const char *particle)
     f_out->cd();
     TH1 *h_edep[ntype];
     for(Int_t it = 0; it < ntype; it++)
-      h_edep[it] = new TH1F(Form("h_edep_%s_%s", clus_name[it], energy_str.c_str()), Form("%s; E [GeV]", energy_str.c_str()), 100, energy*0.8, energy*1.2);
+      h_edep[it] = new TH1F(Form("h_edep_%s_%s", clus_name[it], energy_str.c_str()), Form("%s; E [GeV]", energy_str.c_str()), 200, energy*0., energy*2.);
 
     TString file_name;
-    file_name.Form("%s/endcap/rec_%s_%gGeV_theta_%g_%gdeg.tree.edm4eic.root", dir_eic, particle, energy, theta_min, theta_max);
+    file_name.Form("%s/endcap/rec_%s_%gGeV_theta_%g_%gdeg-%d.tree.edm4eic.root", dir_eic, particle, energy, theta_min, theta_max, proc);
     //file_name.Form("s3https://dtn01.sdcc.bnl.gov:9000/eictest/EPIC/RECO/22.11.0/epic_brycecanyon/SINGLE/gamma/%s/3to50deg/%s_%s_3to50deg.%04d.eicrecon.tree.edm4eic.root", energy_str.c_str(), particle, energy_str.c_str(), proc+1);
 
     const Int_t max_mc = 10;

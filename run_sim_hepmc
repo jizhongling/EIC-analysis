@@ -10,8 +10,7 @@ export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
 
 # Input simulation parameters
 particle="$2"
-energies=(0.1 0.2 0.5 1 2 5 10 20 40 60)
-#energies=(65 70 80 90 100)
+energies=(1 2 3 4 6 8 10 15 20 30 40 60 80 100)
 j=$(( $1 % 10 ))
 k=$(( $1 / 10 ))
 beam_energy=${energies[$k]}
@@ -60,11 +59,10 @@ npsim --runType batch \
 
 # Running JANA
 cd ../EICrecon
-eicrecon -Pjana:debug_plugin_loading=1 \
-         -Pjana:nevents=${num_events} \
-         -Pacts:MaterialMap=calibrations/materials-map.cbor \
+eicrecon -Pjana:nevents=${num_events} \
          -Pdd4hep:xml_files=${compact_file} \
-         -PBEMC:EcalBarrelScFiRawHits:signalSumFields="" \
+         -PEEMC:EcalEndcapPRawHits:capacityADC="1048576" \
+         -PEEMC:EcalEndcapPRecHits:capacityADC="1048576" \
          -Ppodio:output_file=${rec_file_no_ext}.tree.edm4eic.root \
          -Phistsfile=${rec_file_no_ext}.ana.root \
          ${sim_file}

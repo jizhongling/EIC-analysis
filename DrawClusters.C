@@ -44,7 +44,7 @@ void DrawClusters(const char *particle = "gamma")
     {
       c[it+1]->cd(ipad);
       gStyle->SetOptFit(1111);
-      auto f_gaus = new TF1("f_gaus", "gaus", energy*0.8, energy*1.2);
+      auto f_gaus = new TF1("f_gaus", "gaus", energy*0.4, energy*1.6);
       f_gaus->SetParameter(0, h_edep[it]->GetMaximum());
       f_gaus->SetParameter(1, energy);
       f_gaus->SetParameter(2, energy*0.03);
