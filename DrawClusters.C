@@ -1,6 +1,6 @@
 void DrawClusters(const char *particle = "gamma")
 {
-  const vector<Double_t> v_energy{0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60};
+  const vector<Double_t> v_energy{1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 100};
   const Double_t theta_min = 15;
   const Double_t theta_max = 25;
 
@@ -8,6 +8,7 @@ void DrawClusters(const char *particle = "gamma")
   const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
 
   auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg.root", particle, theta_min, theta_max));
+  auto g_res_zhiwan = new TGraphErrors("results/clus-res-zhiwan.txt", "%lg %lg %lg");
 
   TCanvas *c[ntype+1];
   TGraphErrors *g_res[ntype];
@@ -75,18 +76,35 @@ void DrawClusters(const char *particle = "gamma")
   }
 
   c_res->cd();
-  auto leg_res = new TLegend;
+  gStyle->SetOptFit(0);
+  auto leg_res = new TLegend(0.3, 0.7, 0.8, 0.9);
   for(Int_t it = 0; it < ntype; it++)
   {
     c[it+1]->Print(Form("results/clusters-res-%s.pdf", clus_name[it]));
-    g_res[it]->SetTitle("Resolution");
+    g_res[it]->SetTitle("#sigma/E");
     g_res[it]->GetXaxis()->SetTitle("E [GeV]");
-    g_res[it]->GetYaxis()->SetRangeUser(0.030, 0.045);
     g_res[it]->SetMarkerStyle(it+20);
     g_res[it]->SetMarkerColor(it+1);
     g_res[it]->SetMarkerSize(1.6);
     g_res[it]->Draw(it==0 ? "AP" : "P");
     leg_res->AddEntry(g_res[it], clus_name[it], "PE");
+  }
+  if(false)
+  {
+    auto f_res = new TF1("f_res", "TMath::Sqrt([0]*[0]/x+[1]*[1])", 0.5, 101.);
+    f_res->SetParameter(0, 0.1);
+    f_res->SetParameter(1, 0.03);
+    f_res->SetLineWidth(1);
+    f_res->SetLineColor(3);
+    g_res[0]->Fit(f_res, "R");
+    g_res_zhiwan->SetMarkerStyle(21);
+    g_res_zhiwan->SetMarkerColor(2);
+    g_res_zhiwan->SetMarkerSize(1.6);
+    g_res_zhiwan->Draw("P");
+    f_res->SetLineColor(4);
+    g_res_zhiwan->Fit(f_res, "R");
+    leg_res->AddEntry(g_res[0], "JANA: 10.4%/#sqrt{E} #oplus 3.2%", "PE");
+    leg_res->AddEntry(g_res_zhiwan, "Geant4: 10.9%/#sqrt{E} #oplus 2.9%", "PE");
   }
   leg_res->Draw();
 

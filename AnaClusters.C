@@ -1,6 +1,6 @@
 void AnaClusters(const Int_t proc, const char *particle)
 {
-  const vector<Double_t> v_energy{0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60};
+  const vector<Double_t> v_energy{1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 100};
   const Double_t theta_min = 15;
   const Double_t theta_max = 25;
 
