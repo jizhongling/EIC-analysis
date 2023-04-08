@@ -63,6 +63,7 @@ eicrecon -Pjana:debug_plugin_loading=1 \
          -Pjana:nevents=${num_events} \
          -Pacts:MaterialMap=calibrations/materials-map.cbor \
          -Pdd4hep:xml_files=${compact_file} \
+         -PEEMC:EcalEndcapPRawHits:energyResolutions="0.00340,0.0009,0" \
          -PEEMC:EcalEndcapPRawHits:capacityADC="1048576" \
          -PEEMC:EcalEndcapPRecHits:capacityADC="1048576" \
          -Ppodio:output_file=${rec_file_no_ext}.tree.edm4eic.root \

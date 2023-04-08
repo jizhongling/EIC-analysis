@@ -7,7 +7,7 @@ void DrawClusters(const char *particle = "gamma")
   const Int_t ntype = 4;
   const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
 
-  auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg.root", particle, theta_min, theta_max));
+  auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg-res-a340-b09.root", particle, theta_min, theta_max));
   auto g_res_zhiwan = new TGraphErrors("results/clus-res-zhiwan.txt", "%lg %lg %lg");
 
   TCanvas *c[ntype+1];
@@ -89,7 +89,7 @@ void DrawClusters(const char *particle = "gamma")
     g_res[it]->Draw(it==0 ? "AP" : "P");
     leg_res->AddEntry(g_res[it], clus_name[it], "PE");
   }
-  if(false)
+  if(true)
   {
     auto f_res = new TF1("f_res", "TMath::Sqrt([0]*[0]/x+[1]*[1])", 0.5, 101.);
     f_res->SetParameter(0, 0.1);
@@ -100,11 +100,11 @@ void DrawClusters(const char *particle = "gamma")
     g_res_zhiwan->SetMarkerStyle(21);
     g_res_zhiwan->SetMarkerColor(2);
     g_res_zhiwan->SetMarkerSize(1.6);
-    g_res_zhiwan->Draw("P");
+    //g_res_zhiwan->Draw("P");
     f_res->SetLineColor(4);
     g_res_zhiwan->Fit(f_res, "R");
-    leg_res->AddEntry(g_res[0], "JANA: 10.4%/#sqrt{E} #oplus 3.2%", "PE");
-    leg_res->AddEntry(g_res_zhiwan, "Geant4: 10.9%/#sqrt{E} #oplus 2.9%", "PE");
+    leg_res->AddEntry(g_res[0], "JANA: 11.1%/#sqrt{E} #oplus 2.0%", "PE");
+    //leg_res->AddEntry(g_res_zhiwan, "Geant4: 10.9%/#sqrt{E} #oplus 2.9%", "PE");
   }
   leg_res->Draw();
 
