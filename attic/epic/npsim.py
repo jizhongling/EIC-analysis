@@ -63,8 +63,8 @@ if __name__ == "__main__":
   SIM.action.mapActions['PFRICH'] = 'Geant4OpticalTrackerAction'
   SIM.action.mapActions['DIRC'] = 'Geant4OpticalTrackerAction'
 
-  SIM.filter.filters['sipm_pecal'] = dict(name="SimSiPM/pecal", parameter={"Cut": 3.0*keV})
-  SIM.filter.mapDetFilter['EcalEndcapP'] = "sipm_pecal"
+  SIM.filter.filters['edep3kev'] = dict(name="TestEnergyCut/3kev", parameter={"Cut": 3.0*keV})
+  SIM.filter.mapDetFilter['EcalEndcapP'] = "edep3kev"
 
   # Parse remaining options (command line and steering file override above)
   SIM.parseOptions()

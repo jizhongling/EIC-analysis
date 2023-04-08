@@ -8,25 +8,26 @@ namespace dd4hep {
   /// Namespace for the Geant4 based simulation part of the AIDA detector description toolkit
   namespace sim {
 
-    struct SimSiPM : public Geant4Filter  {
+    struct TestEnergyCut : public Geant4Filter  {
       /// Energy cut value
       double m_energyCut;
       public:
       /// Constructor.
-      SimSiPM(Geant4Context* c, const std::string& n);
+      TestEnergyCut(Geant4Context* c, const std::string& n);
       /// Standard destructor
-      virtual ~SimSiPM();
+      virtual ~TestEnergyCut();
       /// Filter action. Return true if hits should be processed
       virtual bool operator()(const G4Step* step) const  override  final  {
+        // DD4hep: DDG4/plugins/Geant4SDActions.cpp
         std::cout << std::setprecision(20) << std::scientific;
         std::cout << "Global time: "
-            << "Pre (" << std::setw(24) << step->GetPreStepPoint()->GetGlobalTime() << ") "
-            << "Post (" << std::setw(24) << step->GetPostStepPoint()->GetGlobalTime() << ") "
-            << std::endl;
+          << "Pre (" << std::setw(24) << step->GetPreStepPoint()->GetGlobalTime() << ") "
+          << "Post (" << std::setw(24) << step->GetPostStepPoint()->GetGlobalTime() << ") "
+          << std::endl;
         std::cout << "Local time: "
-            << " Pre (" <<std::setw(24) << step->GetPreStepPoint()->GetLocalTime()  << ") "
-            << " Post (" <<std::setw(24) << step->GetPostStepPoint()->GetLocalTime() << ") "
-            << std::endl;
+          << " Pre (" <<std::setw(24) << step->GetPreStepPoint()->GetLocalTime()  << ") "
+          << " Post (" <<std::setw(24) << step->GetPostStepPoint()->GetLocalTime() << ") "
+          << std::endl;
         return step->GetTotalEnergyDeposit() > m_energyCut;
       }
       /// GFlash/FastSim interface: Filter action. Return true if hits should be processed
@@ -52,16 +53,16 @@ using namespace dd4hep::sim;
 using namespace dd4hep;
 using namespace std;
 
-DECLARE_GEANT4ACTION(SimSiPM)
+DECLARE_GEANT4ACTION(TestEnergyCut)
 
-  /// Constructor.
-SimSiPM::SimSiPM(Geant4Context* c, const std::string& n)
+/// Constructor.
+TestEnergyCut::TestEnergyCut(Geant4Context* c, const std::string& n)
   : Geant4Filter(c,n) {
     InstanceCount::increment(this);
     declareProperty("Cut",m_energyCut=0.0);
   }
 
 /// Standard destructor
-SimSiPM::~SimSiPM() {
+TestEnergyCut::~TestEnergyCut() {
   InstanceCount::decrement(this);
 }
