@@ -1,0 +1,29 @@
+{
+  "eta_range": [0.9, 1.9, 0.001],
+  "phi": 70,
+  "path_r": 400,
+  "start_point": [0, 0, 0],
+  "detectors": {
+    "EcalBarrelScFi": {
+      "materials": ["SciFiPb*"]
+    },
+    "EcalEndcapP": {
+      "materials": ["Air", "Aluminum", "Fr4", "Plexiglass", "AvgTungstenScFi"],
+      "geo": [
+        "math.sqrt(x**2 + y**2) >= {EcalEndcapP_rmin}",
+        "math.sqrt(x**2 + y**2) <= {EcalEndcapP_rmax}",
+        "z >= {EcalEndcapP_zmin}",
+        "z <= {EcalEndcapP_zmin} + {EcalEndcapP_length}"
+        ]
+    },
+    "PassiveSteelRingEndcapP": {
+      "materials": ["Steel235"],
+      "geo": [
+        "math.sqrt(x**2 + y**2) >= {EcalEndcapP_rmax}",
+        "math.sqrt(x**2 + y**2) <= {HcalBarrel_rmax}",
+        "z >= {EcalEndcapP_zmin}",
+        "z <= {EcalEndcapP_zmin} + {EcalEndcapP_length}"
+        ]
+    }
+  }
+}
