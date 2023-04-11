@@ -1,0 +1,31 @@
+{
+  "eta_range": [0.9, 1.9, 0.001],
+  "phi": 70,
+  "path_r": 400,
+  "start_point": [0, 0, 0],
+  "detectors": {
+    "InnerTrackerSupport": {
+      "materials": ["Aluminum", "CarbonFiber"],
+      "geo": [
+        "math.sqrt(x**2 + y**2) < {DIRC_rmin}",
+        "abs(z) <= {TrackerSupportConeEndcapN_zmax}"
+        ]
+    },
+    "SolenoidEndcapP": {
+      "materials": ["Aluminum5083", "Helium", "Aluminum5083", "MylarMLI", "Copper", "MylarMLI", "Aluminum5083"],
+      "geo": [
+        "math.sqrt(x**2 + y**2) >= min({SolenoidEndcapCoilEndSupport_rmin}, {SolenoidEndcapHelium_rmin}, {SolenoidEndcapHeliumVessel_rmin}, {SolenoidEndcapFirstMLILayer_rmin}, {SolenoidEndcapThermalShield_rmin}, {SolenoidEndcapSecondMLILayer_rmin}, {SolenoidEndcapVacuumVessel_rmin})",
+        "math.sqrt(x**2 + y**2) <= max({SolenoidEndcapCoilEndSupport_rmax}, {SolenoidEndcapHelium_rmax}, {SolenoidEndcapHeliumVessel_rmax}, {SolenoidEndcapFirstMLILayer_rmax}, {SolenoidEndcapThermalShield_rmax}, {SolenoidEndcapSecondMLILayer_rmax}, {SolenoidEndcapVacuumVessel_rmax})",
+        "z >= min({SolenoidEndcapCoilEndSupportThickness}, {SolenoidEndcapHeliumThickness}, {SolenoidEndcapHeliumVesselThickness}, {SolenoidEndcapFirstMLILayerThickness}, {SolenoidEndcapThermalShieldThickness}, {SolenoidEndcapSecondMLILayerThickness}, {SolenoidEndcapVacuumVesselThickness})"
+        ]
+    },
+    "BarrelDIRC": {
+      "materials": ["Aluminum", "Quartz", "Nlak33a"],
+      "geo": [
+        "math.sqrt(x**2 + y**2) < {DIRC_rmin}",
+        "z <= {DIRCForward_zmax}",
+        "z >= -{DIRCBackward_zmax}"
+        ]
+    }
+  }
+}
