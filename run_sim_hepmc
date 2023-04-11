@@ -28,7 +28,7 @@ WRKDIR=${OUTDIR}
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=${DETECTOR_PATH}/epic_pecal.xml
+compact_file=${DETECTOR_PATH}/epic_full.xml
 info_string="${particle}_${beam_energy}GeV_theta_${theta_min}_${theta_max}deg-$j"
 hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
 sim_file="${WRKDIR}/sim_${info_string}.edm4hep.root"

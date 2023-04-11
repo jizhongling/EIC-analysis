@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
     # plot
     pdf = matplotlib.backends.backend_pdf.PdfPages('material_scan_details.pdf')
-    colors = ['royalblue', 'forestgreen', 'darkviolet', 'silver', 'indianred', 'goldenrod', 'darkturquoise']
+    colors = ['royalblue', 'forestgreen', 'darkviolet', 'silver', 'indianred', 'goldenrod', 'darkturquoise', 'red', 'green', 'blue']
 
     fig, ax = plt.subplots(figsize=(16, 5), dpi=160,
                            gridspec_kw={'top': 0.995, 'bottom': 0.2, 'left': 0.08, 'right': 0.98})
@@ -306,13 +306,13 @@ if __name__ == '__main__':
     ax.tick_params(which='both', direction='in', labelsize=22)
     ax.set_xlabel('$\eta$', fontsize=22)
     ax.set_ylabel('X0', fontsize=22)
-    ax.xaxis.set_major_locator(MultipleLocator(0.5))
-    ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+    # ax.xaxis.set_major_locator(MultipleLocator(0.5))
+    # ax.xaxis.set_minor_locator(MultipleLocator(0.1))
     # ax.yaxis.set_major_locator(MultipleLocator(10))
     # ax.yaxis.set_minor_locator(MultipleLocator(5))
     ax.grid(ls=':', which='both')
     ax.set_axisbelow(False)
-    ax.set_xlim(0.9, 1.9)
+    # ax.set_xlim(-2.2, 1.8)
     ax.set_ylim(0., ax.get_ylim()[1]*1.1)
     ax.legend(bbox_to_anchor=(0.0, 0.9, 1.0, 0.1), ncol=6, loc="upper center", fontsize=22,
           borderpad=0.2, labelspacing=0.2, columnspacing=0.6, borderaxespad=0.05, handletextpad=0.4)
@@ -339,11 +339,12 @@ if __name__ == '__main__':
         ax.tick_params(which='both', direction='in', labelsize=22)
         ax.set_xlabel('$\eta$', fontsize=22)
         ax.set_ylabel('X0', fontsize=22)
-        ax.xaxis.set_major_locator(MultipleLocator(0.5))
-        ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+        # ax.xaxis.set_major_locator(MultipleLocator(0.5))
+        # ax.xaxis.set_minor_locator(MultipleLocator(0.1))
         ax.grid(ls=':', which='both')
         ax.set_axisbelow(False)
-        ax.set_xlim(0.9, 1.9)
+        # ax.set_xlim(-2.2, 1.8)
+        ax.set_ylim(0., ax.get_ylim()[1]*1.1)
         # ax.set_yscale('log')
         pdf.savefig(fig)
     pdf.close()

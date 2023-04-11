@@ -4,8 +4,14 @@
   "path_r": 400,
   "start_point": [0, 0, 0],
   "detectors": {
-    "EcalBarrelScFi": {
-      "materials": ["SciFiPb*"]
+    "EcalBarrel": {
+      "materials": ["SciGlass", "CarbonFiber", "Aluminum5083", "StainlessSteel"],
+      "geo": [
+        "math.sqrt(x**2 + y**2) >= {EcalBarrel_rmin}",
+        "math.sqrt(x**2 + y**2) <= {EcalBarrel_rmax}",
+        "z >= -{EcalBarrelBackward_zmax}",
+        "z <= {EcalBarrelForward_zmax}"
+        ]
     },
     "EcalEndcapP": {
       "materials": ["Air", "Aluminum", "Fr4", "Plexiglass", "AvgTungstenScFi"],
