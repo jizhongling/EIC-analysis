@@ -4,11 +4,18 @@ void DrawClusters(const char *particle = "gamma")
   const Double_t theta_min = 15;
   const Double_t theta_max = 25;
 
-  const Int_t ntype = 4;
-  const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
+  //const Int_t ntype = 4;
+  //const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
 
-  auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg-res-a340-b09.root", particle, theta_min, theta_max));
-  auto g_res_zhiwan = new TGraphErrors("results/clus-res-zhiwan.txt", "%lg %lg %lg");
+  //auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg-res-a340-b09.root", particle, theta_min, theta_max));
+  //auto g_res_zhiwan = new TGraphErrors("results/clus-res-zhiwan.txt", "%lg %lg %lg");
+
+  const Int_t ntype = 4;
+  const char *clus_name[ntype] = {"full", "full-nosupport", "pecal", "pecal-nosupport"};
+
+  TFile *f[ntype];
+  for(Int_t it=0; it<ntype; it++)
+    f[it] = new TFile(Form("results/clus_%s_theta_%g_%gdeg-%s.root", particle, theta_min, theta_max, clus_name[it]));
 
   TCanvas *c[ntype+1];
   TGraphErrors *g_res[ntype];
@@ -28,7 +35,8 @@ void DrawClusters(const char *particle = "gamma")
 
     TH1 *h_edep[ntype];
     for(Int_t it = 0; it < ntype; it++)
-      h_edep[it] = (TH1*)f->Get(Form("h_edep_%s_%s", clus_name[it], energy_str.c_str()));
+      //h_edep[it] = (TH1*)f->Get(Form("h_edep_%s_%s", clus_name[it], energy_str.c_str()));
+      h_edep[it] = (TH1*)f[it]->Get(Form("h_edep_%s_%s", "Clusters", energy_str.c_str()));
 
     c[0]->cd(ipad);
     gStyle->SetOptStat(0);
@@ -87,24 +95,16 @@ void DrawClusters(const char *particle = "gamma")
     g_res[it]->SetMarkerColor(it+1);
     g_res[it]->SetMarkerSize(1.6);
     g_res[it]->Draw(it==0 ? "AP" : "P");
-    leg_res->AddEntry(g_res[it], clus_name[it], "PE");
-  }
-  if(true)
-  {
+
     auto f_res = new TF1("f_res", "TMath::Sqrt([0]*[0]/x+[1]*[1])", 0.5, 101.);
     f_res->SetParameter(0, 0.1);
     f_res->SetParameter(1, 0.03);
     f_res->SetLineWidth(1);
-    f_res->SetLineColor(3);
-    g_res[0]->Fit(f_res, "R");
-    g_res_zhiwan->SetMarkerStyle(21);
-    g_res_zhiwan->SetMarkerColor(2);
-    g_res_zhiwan->SetMarkerSize(1.6);
-    //g_res_zhiwan->Draw("P");
-    f_res->SetLineColor(4);
-    g_res_zhiwan->Fit(f_res, "R");
-    leg_res->AddEntry(g_res[0], "JANA: 11.1%/#sqrt{E} #oplus 2.0%", "PE");
-    //leg_res->AddEntry(g_res_zhiwan, "Geant4: 10.9%/#sqrt{E} #oplus 2.9%", "PE");
+    f_res->SetLineColor(it+1);
+    g_res[it]->Fit(f_res, "RQ");
+    Double_t a = f_res->GetParameter(0);
+    Double_t b = f_res->GetParameter(1);
+    leg_res->AddEntry(g_res[it], Form("%s: %.1f%/#sqrt{E} #oplus %.1f%", clus_name[it], a*100., b*100.), "PE");
   }
   leg_res->Draw();
 
