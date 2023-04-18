@@ -5,11 +5,11 @@
   "start_point": [0, 0, 0],
   "detectors": {
     "Support": {
-      "materials": ["Acrylic_DRICH", "Aerogel_DRICH", "C2F6_DRICH", "CarbonFiber", "Fr4", "Plexiglass", "Silicon", "Aluminum", "AirOptical"],
+      "materials": ["Acrylic_DRICH", "Aerogel_DRICH", "C2F6_DRICH", "Fr4", "Plexiglass", "Silicon", "AirOptical"],
       "geo": [
         "math.sqrt(x**2 + y**2) >= {EcalEndcapP_rmin}",
         "math.sqrt(x**2 + y**2) <= {EcalEndcapP_rmax}",
-        "z <= {EcalEndcapP_zmin}"
+        "z <= {EcalEndcapP_zmin} + {EcalEndcapP_length}"
         ]
     }
   }
