@@ -1,0 +1,17 @@
+{
+  "eta_range": [-3, 3, 0.002],
+  "phi": 70,
+  "path_r": 400,
+  "start_point": [0, 0, 0],
+  "detectors": {
+    "Support": {
+      "materials": ["VM2000", "AluminumOxide", "Kapton", "Acrylic_DRICH", "Aerogel_DRICH", "C2F6_DRICH", "Fr4", "Plexiglass", "Silicon", "AirOptical"],
+      "geo": [
+        "math.sqrt(x**2 + y**2) >= {EcalEndcapP_rmin}",
+        "math.sqrt(x**2 + y**2) <= {EcalEndcapP_rmax}",
+        "z >= -{EcalEndcapN_zmin}",
+        "z <= {EcalEndcapP_zmin}"
+        ]
+    }
+  }
+}
