@@ -20,9 +20,10 @@ min_e=$(echo "$eElectron * 0.02" | bc)
 num_events=1000
 physics_list="FTFP_BERT_HP"
 
-OUTDIR=$SPIN/data/eic/endcap
-WRKDIR=${OUTDIR}
 #WRKDIR=${_CONDOR_SCRATCH_DIR}
+#OUTDIR=${_CONDOR_SCRATCH_DIR}
+WRKDIR=$SPIN/data/eic/endcap
+OUTDIR=$SPIN/data/eic/endcap
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names

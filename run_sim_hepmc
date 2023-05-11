@@ -10,25 +10,26 @@ export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
 
 # Input simulation parameters
 particle="$2"
-energies=(1 2 3 4 6 8 10 15 20 30 40 60 80 100)
-j=$(( $1 % 10 ))
-k=$(( $1 / 10 ))
+energies=(1 2 4 8 16 24)
+j=$(( $1 % 50 ))
+k=$(( $1 / 50 ))
 beam_energy=${energies[$k]}
 min_e=$(echo "$beam_energy * 0.02" | bc)
 num_events=1000
-theta_min=15 # in degrees
-theta_max=25 # in degrees
+theta_min=23 # in degrees
+theta_max=37 # in degrees
 phi_min=0 # in degrees
 phi_max=360 # in degrees 
 physics_list="FTFP_BERT_HP"
 
-OUTDIR=$SPIN/data/eic/endcap
-WRKDIR=${OUTDIR}
-#WRKDIR=${_CONDOR_SCRATCH_DIR}
+WRKDIR=${_CONDOR_SCRATCH_DIR}
+OUTDIR=${_CONDOR_SCRATCH_DIR}
+#WRKDIR=$SPIN/data/eic/endcap
+#OUTDIR=$SPIN/data/eic/endcap
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=${DETECTOR_PATH}/epic_full.xml
+compact_file=${DETECTOR_PATH}/epic_brycecanyon.xml
 info_string="${particle}_${beam_energy}GeV_theta_${theta_min}_${theta_max}deg-$j"
 hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
 sim_file="${WRKDIR}/sim_${info_string}.edm4hep.root"

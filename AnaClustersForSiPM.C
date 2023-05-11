@@ -26,6 +26,7 @@ void AnaClustersForSiPM(const Int_t proc, const char *particle)
     TString file_name;
     file_name.Form("%s/endcap/rec_%s_%s_theta_%g_%gdeg-%d.tree.edm4eic.root", dir_eic, particle, energy_str.c_str(), theta_min, theta_max, proc);
 
+    // Reserve enough space to avoid segmentation fault
     const Int_t max_track = 1000;
     TFile *data_file = TFile::Open(file_name);
     if(!data_file)
@@ -36,6 +37,7 @@ void AnaClustersForSiPM(const Int_t proc, const char *particle)
     cout << "Opening " << file_name << endl;
 
     auto events = (TTree*)data_file->Get("events");
+    // Check the type of variables
     Float_t pmc[3][max_track], edep[ntype][max_track];
     events->SetBranchAddress("MCParticles.momentum.x", (Float_t*)pmc[0]);
     events->SetBranchAddress("MCParticles.momentum.y", (Float_t*)pmc[1]);
@@ -46,7 +48,8 @@ void AnaClustersForSiPM(const Int_t proc, const char *particle)
     for(Long64_t i = 0; i < events->GetEntries(); i++)
     {
       events->GetEntry(i);
-      TVector3 v3_pmc(pmc[0][2], pmc[1][2], pmc[2][2]);
+      // Check MCParticles for the index of the generated particle
+      ROOT::Math::XYZVector v3_pmc(pmc[0][2], pmc[1][2], pmc[2][2]);
       Double_t theta = v3_pmc.Theta() * 180. / TMath::Pi();
       if( theta < theta_min || theta > theta_max )
         continue;
