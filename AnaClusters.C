@@ -1,19 +1,19 @@
 void AnaClusters(const Int_t proc, const char *particle)
 {
-  const vector<Double_t> v_energy{1, 2, 4, 8, 16, 24};
+  const vector<pair<Double_t, Double_t>> v_energy{{1, 1.324}, {2, 1.306}, {4, 1.289}, {8, 1.325}, {16, 1.366}, {24, 1.539}};
   const Double_t theta_min = 23;
   const Double_t theta_max = 37;
 
-  const Int_t ndet = 3;
+  const Int_t ndet = 2;
   const Int_t ntype = 2;
-  const char *det_name[ndet+1] = {"EcalEndcapP", "EcalBarrelScFi", "EcalBarrelImaging", "EcalSum"};
+  const char *det_name[ndet+1] = {"EcalEndcapP", "EcalBarrelScFi", "EcalSum"};
   //const char *clus_name[ntype] = {"RecHits", "TruthClusters", "Clusters", "MergedClusters"};
   const char *clus_name[ntype] = {"RecHits", "Clusters"};
 
   const char *dir_eic = "/gpfs/mnt/gpfs02/phenix/spin/spin1/phnxsp01/zji/data/eic";
   auto f_out = new TFile(Form("%s/histos/clus_%s_theta_%g_%gdeg-%d.root", dir_eic, particle, theta_min, theta_max, proc), "RECREATE");
 
-  for(auto energy : v_energy)
+  for(const auto &[energy, scale] : v_energy)
   {
     string energy_str(Form("%g%s", energy < 1 ? energy*1e3 : energy, energy < 1 ? "MeV" : "GeV"));
 
@@ -68,6 +68,8 @@ void AnaClusters(const Int_t proc, const char *particle)
           Float_t edep_sum = 0.;
           for(Long64_t j = 0; j < events->GetLeaf(Form("%s%s.energy", det_name[id], clus_name[it]))->GetLen(); j++)
           {
+            if(strcmp(det_name[id], "EcalBarrelScFi") == 0)
+              edep[id][it][j] *= scale;
             if(it == 0)
             {
               edep_sum += edep[id][it][j];
