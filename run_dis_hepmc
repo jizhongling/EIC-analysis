@@ -5,19 +5,19 @@ set -o errexit
 # Setup environment
 export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
 export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
-#export JANA_HOME=$EIC_SHELL_PREFIX
-#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
+export JANA_HOME=$EIC_SHELL_PREFIX
+export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Input simulation parameters
 eB=(5  5   10  10  18)
 eA=(41 100 100 275 275)
-j=$(( $1 % 100 ))
-k=$(( $1 / 100 ))
+j=$(( $1 % 10000 ))
+k=4 #$(( $1 / 100 ))
 eElectron=${eB[$k]}
 eProton=${eA[$k]}
-Q2min=1
+Q2min=10
 min_e=$(echo "$eElectron * 0.02" | bc)
-num_events=1000
+num_events=300
 physics_list="FTFP_BERT_HP"
 
 #WRKDIR=${_CONDOR_SCRATCH_DIR}
@@ -27,7 +27,7 @@ OUTDIR=$SPIN/data/eic/endcap
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=${DETECTOR_PATH}/epic_full.xml
+compact_file=${DETECTOR_PATH}/epic_brycecanyon_no_backward.xml
 info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
 hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
 abconv_file="${WRKDIR}/abc_${info_string}.hepmc"

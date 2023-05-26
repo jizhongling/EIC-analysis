@@ -70,10 +70,12 @@ int main(int argc, char *argv[])
 
   // Set up DIS process within some phase space
   // Neutral current (with gamma/Z interference)
-  pythia.readString("WeakBosonExchange:ff2ff(t:gmZ) = on");
+  //pythia.readString("WeakBosonExchange:ff2ff(t:gmZ) = on");
   // Uncomment to allow charged current
   //pythia.readString("WeakBosonExchange:ff2ff(t:W) = on");
   pythia.readString("PromptPhoton:all = off");
+  // Uncomment and turn on PDF:lepton to enable photon-parton processes
+  pythia.readString("PhotonParton:ggm2bbbar = on");
 
   // Phase-space cut: minimal Q2 of process
   pythia.readString("PhaseSpace:Q2Min = " + Q2min);
@@ -91,7 +93,9 @@ int main(int argc, char *argv[])
   pythia.readString("PDF:pSet = 8");
 
   // QED radiation off lepton not handled yet by the new procedure
-  pythia.readString("PDF:lepton = off");
+  pythia.readString("PDF:lepton = on");
+  // Uncomment and turn on PDF:lepton to enable photon-parton processes
+  pythia.readString("PDF:beamB2gamma = on");
   pythia.readString("TimeShower:QEDshowerByL = off");
 
   // Radiation and hadronization settings
@@ -102,6 +106,13 @@ int main(int argc, char *argv[])
   pythia.readString("HadronLevel:all = on");
   pythia.readString("HadronLevel:Decay = on");
 
+  // Kinematic cuts
+  const Double_t mom_min = 2.;
+  const Double_t mom_max = 100.;
+
+  const Double_t eta_min = 1.4;
+  const Double_t eta_max = 4.;
+
   // Initialize
   pythia.init();
 
@@ -109,6 +120,17 @@ int main(int argc, char *argv[])
   for (int iEvent = 0; iEvent < nEvent; ++iEvent)
   {
     if (!pythia.next()) continue;
+
+    if (pythia.event.size() < 7) continue;
+    const Particle &part = pythia.event[7];
+    Double_t mom = part.pAbs();
+    Double_t eta = part.eta();
+    if (mom < mom_min || mom > mom_max ||
+        eta < eta_min || eta > eta_max)
+    {
+      iEvent--;
+      continue;
+    }
 
     // Construct new empty HepMC event and fill it
     // Default units are (HepMC3::Units::GEV, HepMC3::Units::MM)
