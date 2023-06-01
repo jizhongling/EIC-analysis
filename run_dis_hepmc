@@ -20,10 +20,10 @@ min_e=$(echo "$eElectron * 0.02" | bc)
 num_events=300
 physics_list="FTFP_BERT_HP"
 
-#WRKDIR=${_CONDOR_SCRATCH_DIR}
-#OUTDIR=${_CONDOR_SCRATCH_DIR}
-WRKDIR=$SPIN/data/eic/endcap
-OUTDIR=$SPIN/data/eic/endcap
+WRKDIR=${_CONDOR_SCRATCH_DIR}
+OUTDIR=${_CONDOR_SCRATCH_DIR}
+#WRKDIR=$SPIN/data/eic/endcap
+#OUTDIR=$SPIN/data/eic/endcap
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
@@ -58,6 +58,8 @@ eicrecon -Pjana:debug_plugin_loading=1 \
          -Pjana:nevents=${num_events} \
          -Pacts:MaterialMap=calibrations/materials-map.cbor \
          -Pdd4hep:xml_files=${compact_file} \
+         -Pecalendcappclusterwithassoc:loglevel="info" \
+         -P:reconstructedparticleswithassoc:loglevel="info" \
          -PFEMC:EcalEndcapPRawHits:energyResolutions="0.00340,0.0009,0" \
          -PFEMC:EcalEndcapPRawHits:capacityADC="1048576" \
          -PFEMC:EcalEndcapPRecHits:capacityADC="1048576" \

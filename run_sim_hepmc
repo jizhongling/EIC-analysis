@@ -5,8 +5,8 @@ set -o errexit
 # Setup environment
 export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
 export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
-#export JANA_HOME=$EIC_SHELL_PREFIX
-#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
+export JANA_HOME=$EIC_SHELL_PREFIX
+export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Input simulation parameters
 particle="$2"
@@ -16,8 +16,8 @@ k=$(( $1 / 50 ))
 beam_energy=${energies[$k]}
 min_e=$(echo "$beam_energy * 0.02" | bc)
 num_events=1000
-theta_min=23 # in degrees
-theta_max=37 # in degrees
+theta_min=15 # in degrees
+theta_max=25 # in degrees
 phi_min=0 # in degrees
 phi_max=360 # in degrees 
 physics_list="FTFP_BERT_HP"
@@ -64,6 +64,8 @@ eicrecon -Pjana:debug_plugin_loading=1 \
          -Pjana:nevents=${num_events} \
          -Pacts:MaterialMap=calibrations/materials-map.cbor \
          -Pdd4hep:xml_files=${compact_file} \
+         -Pecalendcappclusterwithassoc:loglevel="info" \
+         -P:reconstructedparticleswithassoc:loglevel="info" \
          -PFEMC:EcalEndcapPRawHits:energyResolutions="0.00340,0.0009,0" \
          -PFEMC:EcalEndcapPRawHits:capacityADC="1048576" \
          -PFEMC:EcalEndcapPRecHits:capacityADC="1048576" \
