@@ -59,6 +59,7 @@ eicrecon -Pjana:debug_plugin_loading=1 \
          -Pacts:MaterialMap=calibrations/materials-map.cbor \
          -Pdd4hep:xml_files=${compact_file} \
          -Pecalendcappclusterwithassoc:loglevel="info" \
+         -Plfhcalclusterwithassoc:loglevel="info" \
          -P:reconstructedparticleswithassoc:loglevel="info" \
          -PFEMC:EcalEndcapPRawHits:energyResolutions="0.00340,0.0009,0" \
          -PFEMC:EcalEndcapPRawHits:capacityADC="1048576" \
