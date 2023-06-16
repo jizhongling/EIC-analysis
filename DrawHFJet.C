@@ -4,9 +4,9 @@ void DrawHFJet()
   //const vector<eBeam_t> v_eBeam{{5,41}, {5,100}, {10,100}, {10,275}, {18,275}};
   const vector<eBeam_t> v_eBeam{{18,275}};
 
-  const Int_t ntype = 2;
-  const char *clus_name[ntype] = {"reco", "charged"};
-  const char *leg_name[ntype] = {"Reconstructed particles", "Charged particles"};
+  const Int_t ntype = 4;
+  const char *clus_name[ntype] = {"reco-R04", "reco-R1", "ecal", "charged"};
+  const char *leg_name[ntype] = {"R=0.4", "R=1.0", "Only pEcal", "Charged particles"};
 
   TFile *f[ntype];
   for(Int_t it=0; it<ntype; it++)
@@ -31,14 +31,14 @@ void DrawHFJet()
           Double_t pTUp = h3_mass->GetXaxis()->GetBinUpEdge(ipt+1);
           h3_mass->GetXaxis()->SetRange(ipt+1, ipt+1);
           auto h2_mass = h3_mass->Project3D("zy");
-          h2_mass->SetTitle(Form("%gx%g GeV, %s %s jet mass, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, clus_name[it], id==0?"b":"bbar", pTLow, pTUp));
+          h2_mass->SetTitle(Form("%gx%g GeV, %s, %s jet mass, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, leg_name[it], id==0?"b":"bbar", pTLow, pTUp));
           h2_mass->DrawCopy("COLZ");
         }
         c0->Print("results/jet-hf.pdf");
         c0->Clear("D");
 
         //"Resolution of jets;E_{jet}^{truth} (GeV);resolution",
-        //20,0.,50., 100,-5.,5.);
+        //20,0.,50., 60,-1.,5.);
         auto h2_res = (TH2*)f[it]->Get(Form("h2_res_%s_%gx%g", id==0?"b":"bbar", eBeam.first, eBeam.second));
         for(Int_t ipt = 0; ipt < 10; ipt++)
         {
@@ -46,7 +46,8 @@ void DrawHFJet()
           Double_t pTLow = h2_res->GetXaxis()->GetBinLowEdge(ipt*2+1);
           Double_t pTUp = h2_res->GetXaxis()->GetBinUpEdge((ipt+1)*2);
           TH1 *h_res = h2_res->ProjectionY(Form("h_res_ipt%d",ipt), ipt*2+1, (ipt+1)*2);
-          h_res->SetTitle(Form("%gx%g GeV, %s %s jet res, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, clus_name[it], id==0?"b":"bbar", pTLow, pTUp));
+          h_res->SetTitle(Form("%gx%g GeV, %s, %s jet res, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, leg_name[it], id==0?"b":"bbar", pTLow, pTUp));
+          h_res->GetXaxis()->SetRangeUser(-1., 2.);
           h_res->DrawCopy();
         }
 
@@ -54,7 +55,7 @@ void DrawHFJet()
         //50,0.,50., 50,0.,50.);
         c0->cd(11);
         auto h2_energy = (TH2*)f[it]->Get(Form("h2_energy_%s_%gx%g", id==0?"b":"bbar", eBeam.first, eBeam.second));
-        h2_energy->SetTitle(Form("%gx%g GeV, %s %s jet energy", eBeam.first, eBeam.second, clus_name[it], id==0?"b":"bbar"));
+        h2_energy->SetTitle(Form("%gx%g GeV, %s, %s jet energy", eBeam.first, eBeam.second, leg_name[it], id==0?"b":"bbar"));
         h2_energy->DrawCopy("COLZ");
         c0->Print("results/jet-hf.pdf");
         c0->Clear("D");
