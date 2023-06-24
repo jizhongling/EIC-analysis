@@ -84,7 +84,7 @@ void AnaHFJet(const Int_t proc)
         for(Int_t j = 0; j < events->GetLeaf(Form("%s.PDG", type_name[it]))->GetLen(); j++)
         {
           if(status[it][j] != 0) continue;
-          TVector3 v3_jet(mom[it][0][j], mom[1][1][j], mom[1][2][j]);
+          TVector3 v3_jet(mom[it][0][j], mom[it][1][j], mom[it][2][j]);
           for(Int_t id = 0; id < 2; id++)
           {
             Float_t this_angle = v3_jet.Angle(v3_mc[id]);
