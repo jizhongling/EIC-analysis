@@ -13,7 +13,7 @@ void AnaJetID(const Int_t proc)
   Float_t jet_mom[4], jet_mass, cst_mom[4][max_cst], cst_energy[3][max_cst];
 
   const char *dir_eic = "/gpfs/mnt/gpfs02/phenix/spin/spin1/phnxsp01/zji/data/eic";
-  auto f_out = new TFile(Form("%s/histos/jet-%d.root", dir_eic, proc), "RECREATE");
+  auto f_out = new TFile(Form("%s/histos/training-%d.root", dir_eic, proc), "RECREATE");
   auto t_out = new TTree("T", "Jet ID");
   t_out->Branch("mc_pid", &mc_pid, "mc_pid/I");
   t_out->Branch("jet_px", &jet_mom[0], "jet_px/F");
