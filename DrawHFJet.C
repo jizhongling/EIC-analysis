@@ -4,9 +4,9 @@ void DrawHFJet()
   //const vector<eBeam_t> v_eBeam{{5,41}, {5,100}, {10,100}, {10,275}, {18,275}};
   const vector<eBeam_t> v_eBeam{{18,275}};
 
-  const Int_t ntype = 4;
-  const char *clus_name[ntype] = {"reco-R04", "reco-R1", "ecal", "charged"};
-  const char *leg_name[ntype] = {"R=0.4", "R=1.0", "Only pEcal", "Charged particles"};
+  const Int_t ntype = 1;
+  const char *clus_name[4] = {"reco-R04", "reco-R1", "ecal", "charged"};
+  const char *leg_name[4] = {"R=0.4", "R=1.0", "Only pEcal", "Charged particles"};
 
   TFile *f[ntype];
   for(Int_t it=0; it<ntype; it++)

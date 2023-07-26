@@ -5,7 +5,7 @@ void DrawJetID()
   const Int_t npt = 3;
 
   const char *type_str[ntype] = {"Accuracy (%)", "Efficiency (%)", "Purity (%)", "Bkg rejection"};
-  const Float_t ymin[ntype] = { 40, 20,  0,  1};
+  const Float_t ymin[ntype] = { 40, 20,  0,  0};
   const Float_t ymax[ntype] = {100, 80, 20, 15};
 
   const Float_t weight[nw] = {10, 12, 15, 20};
@@ -24,19 +24,15 @@ void DrawJetID()
 
   for(Int_t it=0; it<ntype; it++)
   {
-    c0->cd(it+1);
+    mcd(0, it+1);
     for(Int_t iw=0; iw<nw; iw++)
     {
       auto g_perf = new TGraph(npt);
       for(Int_t ipt=0; ipt<npt; ipt++)
         g_perf->SetPoint(ipt, pt[ipt], perf[it][ipt][iw]);
       g_perf->SetTitle(type_str[it]);
-      g_perf->GetXaxis()->SetTitle("Jet p_{T} (GeV)");
-      g_perf->GetXaxis()->SetLimits(1., 11.);
-      g_perf->GetYaxis()->SetRangeUser(ymin[it], ymax[it]);
-      g_perf->SetMarkerStyle(iw+20);
-      g_perf->SetMarkerColor(iw+1);
-      g_perf->SetMarkerSize(1.6);
+      aset(g_perf, "Jet min p_{T} (GeV)","", 0.,12., ymin[it],ymax[it]);
+      style(g_perf, iw+20, iw+1);
       g_perf->Draw(iw==0?"AP":"P");
       if(it == 3)
       {

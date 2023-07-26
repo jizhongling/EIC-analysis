@@ -107,9 +107,9 @@ int main(int argc, char *argv[])
   pythia.readString("HadronLevel:Decay = on");
 
   // Kinematic cuts
+  const Int_t iparton = 5;  // 5: inclusive; 7: bbar
   const Double_t mom_min = 2.;
   const Double_t mom_max = 100.;
-
   const Double_t eta_min = 1.4;
   const Double_t eta_max = 4.;
 
@@ -121,8 +121,8 @@ int main(int argc, char *argv[])
   {
     if (!pythia.next()) continue;
 
-    if (pythia.event.size() < 5) continue;
-    const Particle &part = pythia.event[5];
+    if (pythia.event.size() < iparton) continue;
+    const Particle &part = pythia.event[iparton];
     Double_t mom = part.pAbs();
     Double_t eta = part.eta();
     if (mom < mom_min || mom > mom_max ||
