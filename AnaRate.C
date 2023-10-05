@@ -1,8 +1,9 @@
 void AnaRate(const Int_t proc)
 {
-  typedef tuple<Double_t, Double_t, Double_t, string> eBeam_t; // eElectron, eProton, minQ2
-  const vector<eBeam_t> v_eBeam{{5,41,1,"_vtxfix"}, {5,41,10,""}, {5,41,100,""}, {10,100,1,""}, {10,100,10,""}, {10,100,100,""}, {10,100,1000,""}, {18,275,1,""}, {18,275,10,""}, {18,275,100,""}, {18,275,1000,""}};
-  const char *version = "23.07.1";
+  typedef tuple<Double_t, Double_t, Double_t, string> eBeam_t; // eElectron, eProton, minQ2, property
+  const vector<eBeam_t> v_eBeam{{5,41,1,"_vtxfix"}, {5,41,10,""}, {5,41,100,""}, {10,100,1,""}, {10,100,10,""}, {10,100,100,""}, {10,100,1000,""}, {10,275,0,"local"}, {10,275,0.5,"local"}, {10,275,1,"local"}, {18,275,1,""}, {18,275,10,""}, {18,275,100,""}, {18,275,1000,""}};
+  //const char *version = "23.07.1";
+  const char *version = "23.08.0";
   const Float_t edep_th = 0.0015;
   const Float_t eta_min = 3.5;
   const Float_t eta_max = 3.7;
@@ -20,7 +21,10 @@ void AnaRate(const Int_t proc)
     TH1 *h_mul = new TH1F(Form("h_mul_%gx%g_%gQ2", get<0>(eBeam), get<1>(eBeam), get<2>(eBeam)), "Multipicity above threshold", 10, -0.5, 9.5);
 
     TString file_name;
-    file_name.Form("s3https://dtn01.sdcc.bnl.gov:9000/eictest/EPIC/RECO/%s/epic_brycecanyon/DIS/NC/%gx%g/minQ2=%g/pythia8NCDIS_%gx%g_minQ2=%g_beamEffects_xAngle=-0.025_hiDiv%s_1.%04d.eicrecon.tree.edm4eic.root", version, get<0>(eBeam), get<1>(eBeam), get<2>(eBeam), get<0>(eBeam), get<1>(eBeam), get<2>(eBeam), get<3>(eBeam).c_str(), proc);
+    if(get<3>(eBeam) == "local")
+      file_name.Form("/gpfs/mnt/gpfs02/phenix/spin/spin1/phnxsp01/zji/data/eic/endcap/rec_pythia8NCDIS_%gx%g_minQ2_%g-%d.tree.edm4eic.root", get<0>(eBeam), get<1>(eBeam), get<2>(eBeam), proc);
+    else
+      file_name.Form("s3https://dtn01.sdcc.bnl.gov:9000/eictest/EPIC/RECO/%s/epic_brycecanyon/DIS/NC/%gx%g/minQ2=%g/pythia8NCDIS_%gx%g_minQ2=%g_beamEffects_xAngle=-0.025_hiDiv%s_1.%04d.eicrecon.tree.edm4eic.root", version, get<0>(eBeam), get<1>(eBeam), get<2>(eBeam), get<0>(eBeam), get<1>(eBeam), get<2>(eBeam), get<3>(eBeam).c_str(), proc);
 
     // Reserve enough space to avoid segmentation fault
     const Int_t max_track = 10000;

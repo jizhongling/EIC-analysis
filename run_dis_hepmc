@@ -9,16 +9,20 @@ export JANA_HOME=$EIC_SHELL_PREFIX
 export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Input simulation parameters
-eB=(5  5   10  10  18)
-eA=(41 100 100 275 275)
-j=$(( $1 % 10000 ))
-k=4 #$(( $1 / 100 ))
+#eB=(5  5   10  10  18)
+#eA=(41 100 100 275 275)
+eB=(5  10  18)
+eA=(41 100 275)
+Q2=(1 10 100 1000)
+j=$(( $1 % 100 ))
+k=$(( $1 / 400 ))
+l=$(( $1 / 100 % 4 ))
 eElectron=${eB[$k]}
 eProton=${eA[$k]}
-Q2min=10
+Q2min=${Q2[$l]}
 min_e=$(echo "$eElectron * 0.02" | bc)
-num_events=300
-physics_list="FTFP_BERT_HP"
+num_events=3000
+physics_list="FTFP_BERT"  # FTFP_BERT_HP not working on Geant4 v11.01.p2
 
 WRKDIR=${_CONDOR_SCRATCH_DIR}
 OUTDIR=${_CONDOR_SCRATCH_DIR}
@@ -27,7 +31,7 @@ OUTDIR=${_CONDOR_SCRATCH_DIR}
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=${DETECTOR_PATH}/epic_brycecanyon_no_backward.xml
+compact_file=${DETECTOR_PATH}/epic_pecal.xml
 info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
 hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
 abconv_file="${WRKDIR}/abc_${info_string}.hepmc"
@@ -45,7 +49,7 @@ cd ../epic
 npsim --runType batch \
       -v WARNING \
       --part.minimalKineticEnergy "${min_e}*GeV" \
-      --physics.list "FTFP_BERT_HP" \
+      --physics.list "${physics_list}" \
       --physics.rangecut "None" \
       --numberOfEvents ${num_events} \
       --compactFile ${compact_file} \

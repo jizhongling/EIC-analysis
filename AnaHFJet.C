@@ -29,7 +29,7 @@ void AnaHFJet(const Int_t proc)
 
       h2_res[id] = new TH2F(Form("h2_res_%s_%gx%g", id==0?"b":"bbar", eBeam.first, eBeam.second),
           "Resolution of jets;E_{jet}^{truth} (GeV);resolution",
-          20,0.,50., 60,-1.,5.);
+          20,0.,50., 600,-1.,2.);
     }
 
     TString file_name;

@@ -14,6 +14,7 @@ void DrawHFJet()
 
   auto c0 = new TCanvas("c0", "c0", 4*600, 3*600);
   c0->Divide(4, 3);
+  gStyle->SetOptStat(0);
 
   c0->Print("results/jet-hf.pdf[");
   for(auto eBeam : v_eBeam)
@@ -31,7 +32,8 @@ void DrawHFJet()
           Double_t pTUp = h3_mass->GetXaxis()->GetBinUpEdge(ipt+1);
           h3_mass->GetXaxis()->SetRange(ipt+1, ipt+1);
           auto h2_mass = h3_mass->Project3D("zy");
-          h2_mass->SetTitle(Form("%gx%g GeV, %s, %s jet mass, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, leg_name[it], id==0?"b":"bbar", pTLow, pTUp));
+          //h2_mass->SetTitle(Form("%gx%g GeV, %s, %s jet mass, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, leg_name[it], id==0?"b":"bbar", pTLow, pTUp));
+          h2_mass->SetTitle(Form("p_{T} = %.1f--%.1f GeV", pTLow, pTUp));
           h2_mass->DrawCopy("COLZ");
         }
         c0->Print("results/jet-hf.pdf");
@@ -46,8 +48,9 @@ void DrawHFJet()
           Double_t pTLow = h2_res->GetXaxis()->GetBinLowEdge(ipt*2+1);
           Double_t pTUp = h2_res->GetXaxis()->GetBinUpEdge((ipt+1)*2);
           TH1 *h_res = h2_res->ProjectionY(Form("h_res_ipt%d",ipt), ipt*2+1, (ipt+1)*2);
-          h_res->SetTitle(Form("%gx%g GeV, %s, %s jet res, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, leg_name[it], id==0?"b":"bbar", pTLow, pTUp));
-          h_res->GetXaxis()->SetRangeUser(-1., 2.);
+          //h_res->SetTitle(Form("%gx%g GeV, %s, %s jet res, p_{T} = %.1f--%.1f GeV", eBeam.first, eBeam.second, leg_name[it], id==0?"b":"bbar", pTLow, pTUp));
+          h_res->SetTitle(Form("p_{T} = %.1f--%.1f GeV", pTLow, pTUp));
+          h_res->GetXaxis()->SetRangeUser(-0.2, 0.2);
           h_res->DrawCopy();
         }
 

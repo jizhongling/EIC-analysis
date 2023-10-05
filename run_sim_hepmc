@@ -20,7 +20,7 @@ theta_min=15 # in degrees
 theta_max=25 # in degrees
 phi_min=0 # in degrees
 phi_max=360 # in degrees 
-physics_list="FTFP_BERT_HP"
+physics_list="FTFP_BERT"  # FTFP_BERT_HP not working on Geant4 v11.01.p2
 
 WRKDIR=${_CONDOR_SCRATCH_DIR}
 OUTDIR=${_CONDOR_SCRATCH_DIR}
@@ -51,7 +51,7 @@ cd ../epic
 npsim --runType batch \
       -v WARNING \
       --part.minimalKineticEnergy "${min_e}*GeV" \
-      --physics.list "FTFP_BERT_HP" \
+      --physics.list "${physics_list}" \
       --physics.rangecut "None" \
       --numberOfEvents ${num_events} \
       --compactFile ${compact_file} \
