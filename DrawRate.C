@@ -1,7 +1,8 @@
 void DrawRate()
 {
   typedef tuple<Double_t, Double_t, Double_t, Int_t> eBeam_t; // eElectron, eProton, minQ2
-  const vector<eBeam_t> v_eBeam{{5,41,1,0}, {5,41,10,0}, {5,41,100,0}, {10,100,1,1}, {10,100,10,1}, {10,100,100,1}, {10,100,1000,1}, {10,275,0,2}, {10,275,0.5,2}, {10,275,1,2}, {18,275,1,3}, {18,275,10,3}, {18,275,100,3}, {18,275,1000,3}};
+  //const vector<eBeam_t> v_eBeam{{5,41,1,0}, {5,41,10,0}, {5,41,100,0}, {10,100,1,1}, {10,100,10,1}, {10,100,100,1}, {10,100,1000,1}, {10,275,0,2}, {10,275,0.5,2}, {10,275,1,2}, {18,275,1,3}, {18,275,10,3}, {18,275,100,3}, {18,275,1000,3}};
+  const vector<eBeam_t> v_eBeam{{5,41,1,0}, {5,41,10,0}, {5,41,100,0}, {5,41,1000,0}, {10,100,1,1}, {10,100,10,1}, {10,100,100,1}, {10,100,1000,1}, {10,275,0,2}, {10,275,0.5,2}, {10,275,1,2}, {18,275,1,3}, {18,275,10,3}, {18,275,100,3}, {18,275,1000,3}};
 
   const Int_t nb = 4;
   Int_t ig[nb] = {};
@@ -10,7 +11,7 @@ void DrawRate()
     g_rate[ib] = new TGraph(4);
   string str_beam[nb];
 
-  auto f = new TFile("results/ecal-rate.root");
+  auto f = new TFile("results/ecal-rate-local.root");
   TH1 *h_twr = (TH1*)f->Get("h_twr");
   const Double_t ntwr = h_twr->GetMaximum();
   cout << "Number of involed towers = " << ntwr << endl;
@@ -50,5 +51,5 @@ void DrawRate()
     leg0->AddEntry(g_rate[ib], str_beam[ib].c_str(), "P");
   }
   leg0->Draw();
-  c0->Print("results/ecal-rate.pdf");
+  c0->Print("results/ecal-rate-local.pdf");
 }

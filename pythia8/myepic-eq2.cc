@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
   for (int iEvent = 0; iEvent < nEvent; ++iEvent)
   {
     if (!pythia.next()) continue;
+    //pythia.event.list();
 
     //if (pythia.event.size() < iparton) continue;
     //const Particle &part = pythia.event[iparton];

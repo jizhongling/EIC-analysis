@@ -5,18 +5,16 @@ set -o errexit
 # Setup environment
 export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
 export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
-export JANA_HOME=$EIC_SHELL_PREFIX
-export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
+#export JANA_HOME=$EIC_SHELL_PREFIX
+#export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
 
 # Input simulation parameters
-#eB=(5  5   10  10  18)
-#eA=(41 100 100 275 275)
-eB=(5  10  18)
-eA=(41 100 275)
-Q2=(1 10 100 1000)
+eB=(5  5   10  10  18)
+eA=(41 100 100 275 275)
+Q2=(0 0.5 1 10 100 1000)
 j=$(( $1 % 100 ))
-k=$(( $1 / 400 ))
-l=$(( $1 / 100 % 4 ))
+k=$(( $1 / 100 / 6 ))
+l=$(( $1 / 100 % 6 ))
 eElectron=${eB[$k]}
 eProton=${eA[$k]}
 Q2min=${Q2[$l]}

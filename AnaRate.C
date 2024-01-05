@@ -1,8 +1,9 @@
 void AnaRate(const Int_t proc)
 {
   typedef tuple<Double_t, Double_t, Double_t, string> eBeam_t; // eElectron, eProton, minQ2, property
-  const vector<eBeam_t> v_eBeam{{5,41,1,"_vtxfix"}, {5,41,10,""}, {5,41,100,""}, {10,100,1,""}, {10,100,10,""}, {10,100,100,""}, {10,100,1000,""}, {10,275,0,"local"}, {10,275,0.5,"local"}, {10,275,1,"local"}, {18,275,1,""}, {18,275,10,""}, {18,275,100,""}, {18,275,1000,""}};
-  //const char *version = "23.07.1";
+  //const vector<eBeam_t> v_eBeam{{5,41,1,"_vtxfix"}, {5,41,10,""}, {5,41,100,""}, {10,100,1,""}, {10,100,10,""}, {10,100,100,""}, {10,100,1000,""}, {10,275,0,"local"}, {10,275,0.5,"local"}, {10,275,1,"local"}, {18,275,1,""}, {18,275,10,""}, {18,275,100,""}, {18,275,1000,""}};
+  const vector<eBeam_t> v_eBeam{{5,41,1,"local"}, {5,41,10,"local"}, {5,41,100,"local"}, {5,41,1000,"local"}, {10,100,1,"local"}, {10,100,10,"local"}, {10,100,100,"local"},
+    {10,100,1000,"local"}, {10,275,0,"local"}, {10,275,0.5,"local"}, {10,275,1,"local"}, {18,275,1,"local"}, {18,275,10,"local"}, {18,275,100,"local"}, {18,275,1000,"local"}};
   const char *version = "23.08.0";
   const Float_t edep_th = 0.0015;
   const Float_t eta_min = 3.5;
