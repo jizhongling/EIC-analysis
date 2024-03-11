@@ -98,7 +98,8 @@ void DrawClustersOverlap(const char *particle = "gamma")
     auto leg_res = new TLegend(0.4, 0.4, 0.85, 0.85);
     leg_res->SetBorderSize(0);
     Int_t index = 0;
-    for(Int_t ith = 0; ith < nth-4; ith++)
+    //for(Int_t ith = 0; ith < nth-4; ith++)
+    for(Int_t ith = nth-5; ith >= 0; ith--)
     {
       Color_t color = main_color[index/4] - index%4;
       g_res[it][ith]->Set(ig_res[it][ith]);
@@ -121,7 +122,7 @@ void DrawClustersOverlap(const char *particle = "gamma")
       Double_t a = f_res->GetParameter(0);
       Double_t b = f_res->GetParameter(1);
       TLegendEntry *leg_entry = leg_res->AddEntry(g_res[it][ith], Form("%.2f--%.2f: %.1f%/#sqrt{E} #oplus %.1f%", theta2eta(theta_min+ith*dth), theta2eta(theta_min+(ith+1)*dth), a*100., b*100.), "P");
-      if(ith == 4) leg_entry->SetTextColor(kRed);
+      if(ith == 6) leg_entry->SetTextColor(kRed);
     }
     leg_res->Draw();
     c_res->Print(Form("results/clusters-res-craterlake-%s.pdf", clus_name[it]));
