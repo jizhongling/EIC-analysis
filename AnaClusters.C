@@ -68,8 +68,8 @@ void AnaClusters(const Int_t proc, const char *particle)
           Float_t edep_sum = 0.;
           for(Long64_t j = 0; j < events->GetLeaf(Form("%s%s.energy", det_name[id], clus_name[it]))->GetLen(); j++)
           {
-            if(strcmp(det_name[id], "EcalBarrelScFi") == 0)
-              edep[id][it][j] *= scale;
+            //if(strcmp(det_name[id], "EcalBarrelScFi") == 0)
+            //  edep[id][it][j] *= scale;
             if(it == 0)
             {
               edep_sum += edep[id][it][j];

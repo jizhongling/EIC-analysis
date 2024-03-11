@@ -1,8 +1,12 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 # Copyright (C) 2023 Chao Peng
 '''
-    A script to scan the materials and draw a plot for it
-    It reads a json configuration file that defines the scan range, step, and the material-detector correspondence
+    A script to scan the materials thickness (X0 or Lambda) over eta
+
+    It uses dd4hep::rec::MaterialManager::placementsBetween to check the material layers, and then uses the detector
+    alignment to transform world coordinates to local coordiantes, and then assigns the materials to a detector based
+    on TGeoVolume::Contains
+    Take a grain of salt about the materials->detector assignment, especially when the detector geometry is very complex
 '''
 
 import os
@@ -23,22 +27,68 @@ import ROOT
 import dd4hep
 import DDRec
 
-
+pd.set_option('display.max_rows', 1000)
 PROGRESS_STEP = 10
+OTHERS_NAME = 'Others'
+# maximum number of detectors/materials to plot
+COLORS = ['royalblue', 'indianred', 'forestgreen', 'gold', 'darkviolet', 'orange', 'darkturquoise']
+# a specified color for Others, this should not be included in COLORS
+OTHERS_COLOR = 'silver'
+
+
+# FIXME: this is a work-around to an issue of dd4hep::rec::MaterialManager::placementsBetween
+# As of 04/21/2023, at negative eta (eta < 0.), the scan will miss the first material layer (vacuum, 2.8 cm)
+# To reporduce this issue, check the difference between:
+#   materialScan epic_brycecanyon.xml 0 0 0 100  40  -0.01 | grep Vacuum
+#   materialScan epic_brycecanyon.xml 0 0 0 100  40  0.01 | grep Vacuum
+# It is GEOMETRY DEPENDENT (the thickness of the first vacuum material layer)
+# This helper class can be removed once the issue is fixed
+# Plan to file a bug report for this (as of 04/21/2023)
+class ThicknessCorrector:
+    def __init__(self, desc=None):
+        self.missing = 0.
+        self.scanned = False
+        if desc is not None:
+            self.scan_missing_thickness(desc)
+
+    def scan_missing_thickness(self, desc, pi=(0.,0.,0.), pf=(100.,40.,0.), dz=0.01, epsilon=1e-3):
+        # assume negative eta is missed, maybe can do a more detailed check?
+        pf1 = np.array(pf) + np.array([0., 0., dz])
+        dft1 = material_scan(desc, pi, pf1, epsilon)
+        th1 = dft1['path_length'].iloc[0]
+        pf2 = np.array(pf) + np.array([0., 0., -dz])
+        dft2 = material_scan(desc, pi, pf2, epsilon)
+        th2 = dft2['path_length'].iloc[0]
+        self.scanned = True
+        # print(dft1.head(3))
+        # print(dft2.head(3))
+        if th1 != th2:
+            self.missing = th1
+
+    def correct_path_length(self, direction, pl=0.):
+        if direction[2] < 0.:
+            pl2 = pl + np.sqrt(1./(direction[0]**2 + direction[1]**2))*self.missing
+            # print('correcting path length {:.2f} -> {:.2f}'.format(pl, pl2))
+            return pl2
+        return pl
+
 
 
 '''
-    re-implementation of MaterialScan::Print in DD4Hep::DDRec
+    Re-implementation of MaterialScan::Print in DD4Hep::DDRec
     MaterialScan does not have a python interface and that function is relatively simple, so here it is
     desc: DD4hep::Detector
     start: 3D vector for start point
     end: 3D vector for end point
     epsilon: step size
 '''
-# NOTE: I tried to get detector information from placedVolume (or CellIDPositionConverter) but it is not useable
-# (too many mistakes and wrong assignments).
-def material_scan(desc, start, end, epsilon=1e-5):
+def material_scan(desc, start, end, epsilon, int_dets=None, thickness_corrector=None):
     mat_mng = DDRec.MaterialManager(desc.worldVolume())
+    # only use the top-level detectors
+    if int_dets is None:
+        dets_list = [d for n, d in desc.world().children()]
+    else:
+        dets_list = [d for n, d in desc.world().children() if n in int_dets]
     # rvec = ROOT.Math.XYZVector()
     # id_conv = DDRec.CellIDPositionConverter(desc)
     # det_dict = {d.id(): n for n, d in desc.world().children()}
@@ -46,19 +96,17 @@ def material_scan(desc, start, end, epsilon=1e-5):
     p0 = np.array(start)
     p1 = np.array(end)
     direction = (p1 - p0)/np.linalg.norm(p1 - p0)
+    # print(p0, p1, direction)
     placements = mat_mng.placementsBetween(tuple(p0), tuple(p1), epsilon);
 
     # calculate material layer by layer
     int_x0 = 0
     int_lambda = 0
-    path_length = 0
+    path_length = 0.
+    if thickness_corrector is not None:
+        path_length = thickness_corrector.correct_path_length(direction, path_length)
+
     res = []
-    cols = [
-        # 'detector',
-        'material', 'Z', 'A', 'density',
-        'radl', 'intl', 'thickness', 'path_length',
-        'X0', 'lamda', 'x', 'y', 'z'
-        ]
     for pv, l in placements:
         # print(pv, l)
         path_length += l
@@ -68,115 +116,39 @@ def material_scan(desc, start, end, epsilon=1e-5):
         intl = mat.GetIntLen()
         x0 = l/radl
         lmd = l/intl
-        # try to locate the detector
-        # det_id = -1
-        # try:
-        #     rvec.SetCoordinates(pcurr)
-        #     det_id = id_conv.findDetElement(rvec).id()
-        # except Exception:
-        #     pass
+        d0 = OTHERS_NAME
+        for d in dets_list:
+            local = d.nominal().worldToLocal(pcurr)
+            local = np.array([local.X(), local.Y(), local.Z()])
+            if d.volume().Contains(local):
+                d0 = d.GetName()
         res.append([
+            d0,
             # det_dict.get(det_id, 'Unknown'),
-            mat.GetName(), mat.GetZ(), mat.GetA(), mat.GetDensity(), radl, intl,
-            l, path_length, x0, lmd, pcurr[0], pcurr[1], pcurr[2],
+            mat.GetName(), mat.GetZ(), mat.GetA(), mat.GetDensity(),
+            radl, intl, l, path_length,
+            x0, lmd,
+            pcurr[0], pcurr[1], pcurr[2],
+            # local[0], local[1], local[2],
             ])
+    cols = [
+        'detector',
+        'material', 'Z', 'A', 'density',
+        'radl', 'intl', 'thickness', 'path_length',
+        'X0', 'lambda',
+        'x', 'y', 'z',
+        # 'local_x', 'local_y', 'local_z'
+        ]
     dft = pd.DataFrame(data=res, columns=cols)
+    # print(dft.groupby('detector')['X0'].sum())
     return dft
 
 
-'''
-    A parser function to convert output from materialScan to a pandas dataframe
-    compact: is path to compact file
-    start_point: a list or tuple for 3D coordinates (cm, according to materialScan)
-    end_point: a lit or tuple for 3D coordinates (cm, according to materialScan)
-    return: a dataframe for materialScan results
-'''
-# NOTE: it is much slower than material_scan, so only used for testing
-def material_scan2(compact, start_point, end_point, timeout=200):
-    EXEC_NAME = 'materialScan'
-    cmd = '{} {} {} {} {} {} {} {}'.format(EXEC_NAME, compact, *np.hstack([start_point, end_point]))
-    byteout = subprocess.check_output(cmd.split(' '), timeout=timeout)
-    lines = []
-
-    # NOTE: the code below is for materialScan output as of 03/05/2023
-    # it may need change if the output format is changed
-    first_digit = False
-    for i, l in enumerate(byteout.decode('UTF-8').rstrip().split('\n')):
-        line = l.strip('| ')
-        if not first_digit and not line[:1].isdigit():
-            continue
-        first_digit = True
-        if not line[:1].isdigit():
-            break
-        # break coordinates for endpoint, which has a format of (x, y, z)
-        lines.append(line.strip('| ').translate({ord(i): None for i in '()'}).replace(',', ' '))
-
-    cols = [
-        'material', 'Z', 'A', 'density',
-        'rad_length', 'int_length', 'thickness', 'path_length',
-        'int_X0', 'int_lamda', 'x', 'y', 'z'
-        ]
-
-    dft = pd.read_csv(StringIO('\n'.join(lines)), sep='\s+', header=None, index_col=0, names=cols)
-    return dft.astype({key: np.float64 for key in cols[1:]})
-
-
-# a default configuraiton for bareel ecal of epic_brycecanyon
-DEFAULT_CONFIG = dict(
-    eta_range=[-2.0, 1.7, 0.001],
-    phi=70.,
-    path_r=120.,
-    start_point=[0., 0., 0.],
-    # The order defines the priority for assigning material layers to a detector
-    detectors=OrderedDict([
-        ('EcalBarrelScFi', dict(
-            # because of special materials, we don't need geo constraints
-            materials=['SciFiPb*'],
-            )),
-        ('EcalBarrelImg', dict(
-            materials=['Air', 'CarbonFiber', 'Silicon', 'Copper', 'Kapton', 'Epoxy'],
-            geo=[
-                'math.sqrt(x**2 + y**2) >= {EcalBarrel_rmin}',
-                'math.sqrt(x**2 + y**2) <= {EcalBarrel_SensitiveLayers_rmax}',
-                'abs(z - {EcalBarrel_Calorimeter_offset}) <= {EcalBarrel_Calorimeter_length}/2.',
-                ],
-            )),
-        ('InnerTrackerSupport', dict(
-            materials=['Aluminum', 'CarbonFiber'],
-            geo=[
-                'math.sqrt(x**2 + y**2) < {DIRC_rmin}',
-                'z <= {TrackerSupportConeEndcapN_zmax}',
-                'z >= -{TrackerSupportConeEndcapN_zmax}',
-                ],
-            )),
-        # ('BarrelDIRC', dict(
-        #     materials=['Aluminum', 'Quartz', 'Nlak33a'],
-        #     geo=[
-        #         'math.sqrt(x**2 + y**2) >= {DIRC_rmin}',
-        #         'math.sqrt(x**2 + y**2) < {EcalBarrel_rmin}',
-        #         'z <= {DIRCForward_zmax}',
-        #         'z >= -{DIRCBackward_zmax}',
-        #         ],
-        #     )),
-        # ('EcalEndcapN', dict(
-        #     materials=['StainlessSteel', 'leadtungsten_optical', 'CarbonFiber', 'VM2000'],
-        #     geo=[
-        #         'math.sqrt(x**2 + y**2) < {EcalBarrel_rmin}',
-        #         'z < -{EcalEndcapN_zmin}',
-        #         ],
-        #     )),
-        # ('HcalEndcapN', dict(
-        #     materials=['Polystyrene', 'Steel235'],
-        #     geo=['z < {HcalEndcapN_zmin}'],
-        #    )),
-        # all other materials fall into this category
-        ('Others', dict(
-            materials=['*'],
-            )),
-        # end of detectors
-        ])
-    )
-
+# the allowed value types {name: [col_name, label_name, major_step, minor_step]}
+ALLOWED_VALUE_TYPES = {
+    'X0': ['X0', '$X_0$', 10, 5],
+    'lambda': ['lambda', '$\lambda$', 5, 1],
+}
 # execute the script
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -185,8 +157,43 @@ if __name__ == '__main__':
             help='Top-level xml file of the detector description.'
             )
     parser.add_argument(
-            '-c', '--config', default=None,
-            help='A JSON configuration file.'
+            '--path-r', type=float, default=400., # 120.,
+            help='R_xy (cm) where the scan stops.'
+            )
+    parser.add_argument(
+            '--start-point', default='0,0,0',
+            help='Start point of the scan, use the format \"x,y,z\", unit is cm.'
+            )
+    parser.add_argument(
+            '--eta-min', type=float, default=-2.0,
+            help='Minimum eta for the scan.'
+            )
+    parser.add_argument(
+            '--eta-max', type=float, default=2.0,
+            help='Minimum eta for the scan.'
+            )
+    parser.add_argument(
+            '--eta-nbins', type=int, default=401,
+            help='Number of bins for the eta scan.'
+            )
+    parser.add_argument(
+            '--phi', type=float, default=20.,
+            help='Phi angle of the scan, unit is degree.'
+            )
+    parser.add_argument(
+            '--epsilon', type=float, default=1e-3,
+            help='Step size for each material scan.'
+            )
+    parser.add_argument(
+            '--value-type', default='X0',
+            help='Choose one in {}.'.format(list(ALLOWED_VALUE_TYPES.keys()))
+            )
+    parser.add_argument(
+            '--detectors',
+            # default='all',
+            # ordering the detectors
+            default='EcalBarrelScFi,EcalEndcapN,EcalEndcapP,SolenoidBarrel,HcalBarrel,HcalEndcapN,HcalEndcapP',
+            help='Names of the interested detectors, separated by \",\". Use \"all\" for all detectors.'
             )
     args = parser.parse_args()
 
@@ -194,48 +201,57 @@ if __name__ == '__main__':
         print('Cannot find {}'.format(args.compact))
         exit(-1)
 
-    # get configurations
-    config = DEFAULT_CONFIG.copy()
-    if args.config is not None:
-        with open(args.config) as json_file:
-            config = json.load(json_file)
+    if args.value_type not in ALLOWED_VALUE_TYPES.keys():
+        print('Cannot find value {}, choose one in {}'.format(args.value_type, list(ALLOWED_VALUE_TYPES.keys())))
+        exit(-1)
+
+    # scan parameters
+    path_r = args.path_r
+    phi = args.phi
+    etas = np.linspace(args.eta_min, args.eta_max, args.eta_nbins)
+    start_point = np.array([float(v.strip()) for v in args.start_point.split(',')])
+    if len(start_point) != 3:
+        print('Error: expecting three values (x,y,z) from --start-point, getting {:d} instead.'.format(len(start_point)))
+        exit(-1)
 
     # geometry initialization
     desc = dd4hep.Detector.getInstance()
     desc.fromXML(args.compact)
 
-    # build a constants dictionary for geo constraints
-    det_constants = {}
-    for key, _ in desc.constants():
-        try:
-            det_constants[key] = desc.constantAsDouble(key)
-        except Exception:
-            det_constants[key] = desc.constantAsString(key)
-    # print(json.dumps(det_constants, indent=4, sort_keys=True))
+    # check detector list (case sensitive)
+    all_dets = [n for n, _ in desc.world().children()]
+    dets = []
+    missing_dets = []
+    sort_dets = False
+    for det in args.detectors.split(','):
+        det = det.strip()
+        if det.lower() == 'all':
+            dets = all_dets
+            # sort detectors by material thickness
+            sort_dets = True
+            break
+        if det in all_dets:
+            dets.append(det)
+        else:
+            missing_dets.append(det)
+    if len(missing_dets) > 0:
+        print('Warning: detectors {} were missing from the description.'.format(missing_dets))
+        print('A full list of detectors are:')
+        for d in all_dets:
+            print('   --- {}'.format(d))
 
-    # update and compile geo constraints
-    # NOTE: variables below (x, y, z) will be used by compiled cuts
-    x, y, z = 0., 0., 0.
-    for det, dconf in config['detectors'].items():
-        geo = []
-        for g in dconf.get('geo', []):
-            cutstr = g.format(**det_constants)
-            print('{} => {}'.format(g, cutstr))
-            geo.append(compile(cutstr, '<string>', 'eval'))
-        config['detectors'][det]['geo'] = geo
 
-    # scan materials
-    eta_range = config.get('eta_range')
-    etas = np.arange(*eta_range)
-    path_r = config.get('path_r')
-    phi = config.get('phi')
-    start_point = config.get('start_point')
-    dets = list(config.get('detectors').keys())
+    # FIXME: work-around for dd4hep material scan issue, check ThicknessCorrector
+    th_corr = ThicknessCorrector()
+    th_corr.scan_missing_thickness(desc, start_point, np.array(start_point) + np.array([100., 50., 0.]),
+                                   dz=0.0001, epsilon=args.epsilon)
 
     # array for detailed data
-    # materials in configuration maybe using wild-card matching, so just assign a large number to be safe
-    vals = np.zeros(shape=(len(etas), len(dets), 40))
-    det_mats = {d: [] for d in dets}
+    # number of materials cannot be pre-determined, so just assign a large number to be safe
+    vals = np.zeros(shape=(len(etas), len(dets) + 1, 50))
+    dets2 = dets + [OTHERS_NAME]
+    det_mats = {d: [] for d in dets2}
+    vt = ALLOWED_VALUE_TYPES[args.value_type]
 
     for i, eta in enumerate(etas):
         if i % PROGRESS_STEP == 0:
@@ -246,38 +262,15 @@ if __name__ == '__main__':
         end_y = path_r*np.sin(phi/180.*np.pi)
         end_z = path_r*np.sinh(eta)
         # print('({:.2f}, {:.2f}, {:.2f})'.format(end_x, end_y, end_z))
-        dfr = material_scan(desc, start_point, (end_x, end_y, end_z))
+        dfr = material_scan(desc, start_point, (end_x, end_y, end_z), epsilon=args.epsilon, int_dets=dets, thickness_corrector=th_corr)
 
-        # assign material layers to detectors
-        mdets = []
-        for x, y, z, mat in dfr[['x', 'y', 'z', 'material']].values:
-            mdet = 'Unknown'
-            for det, dconf in config['detectors'].items():
-                mats = dconf.get('materials', [])
-                geo = dconf.get('geo', [])
-                # material not match
-                if not any([fnmatch.fnmatch(mat, m) for m in mats]):
-                    continue
-                # geo constraints
-                in_geo = True
-                for g in geo:
-                    if not eval(g):
-                        in_geo = False
-                        break
-                if in_geo:
-                    # find the detector
-                    mdet = det
-                    break
-            mdets.append(mdet)
-        dfr.loc[:, 'detector'] = mdets
-        # print(dfr.groupby('detector')['X0'].sum())
         # aggregated values for detectors
-        x0_vals = dfr.groupby('detector')['X0'].sum().to_dict()
-        for j, det in enumerate(dets):
+        x0_vals = dfr.groupby('detector')[vt[0]].sum().to_dict()
+        for j, det in enumerate(dets2):
             vals[i, j, 0] = x0_vals.get(det, 0.)
             # update material dict
             dfd = dfr[dfr['detector'] == det]
-            x0_mats = dfd.groupby('material')['X0'].sum()
+            x0_mats = dfd.groupby('material')[vt[0]].sum()
             for mat in x0_mats.index:
                 if mat not in det_mats[det]:
                     det_mats[det] = det_mats[det] + [mat]
@@ -286,65 +279,99 @@ if __name__ == '__main__':
 
     print('Scanned {:d}/{:d} lines for {:.2f} < eta < {:.2f}'.format(len(etas), len(etas), etas[0], etas[-1]))
 
-    # aggregated_data
-    dfa = pd.DataFrame(data=vals[:, :, 0], columns=dets, index=etas)
+    # aggregated data for plots
+    dfa = pd.DataFrame(data=vals[:, :, 0], columns=dets2, index=etas)
+    # sort columns by the total thickness (over eta range)
+    sdets = dets
+    if sort_dets:
+        sdets = [d for d in dfa.sum().sort_values(ascending=False).index if d != OTHERS_NAME]
+        dfa = dfa[sdets + [OTHERS_NAME]]
     dfa.to_csv('material_scan_agg.csv')
 
-    # plot
+    # plots
     pdf = matplotlib.backends.backend_pdf.PdfPages('material_scan_details.pdf')
-    colors = ['royalblue', 'forestgreen', 'darkviolet', 'silver', 'indianred', 'goldenrod', 'darkturquoise', 'red', 'green', 'blue']
+    fig, ax = plt.subplots(figsize=(16, 8), dpi=160,
+                           gridspec_kw={'top': 0.9, 'bottom': 0.2, 'left': 0.08, 'right': 0.98})
 
-    fig, ax = plt.subplots(figsize=(16, 5), dpi=160,
-                           gridspec_kw={'top': 0.995, 'bottom': 0.2, 'left': 0.08, 'right': 0.98})
+    # group some detectors into Others because not enough colors for them
+    plot_dets = sdets
+    if len(sdets) > len(COLORS):
+        group_dets = sdets[len(COLORS):]
+        dfa.loc[:, OTHERS_NAME] += dfa.loc[:, group_dets].sum(axis=1)
+        print('Detectors {} are grouped into {} due to limited number of colors.'.format(group_dets, OTHERS_NAME))
+        plot_dets = sdets[:len(COLORS)]
+
+    # plot
     bottom = np.zeros(len(dfa))
     width = np.mean(np.diff(dfa.index))
-    if len(dfa.columns) > len(colors):
-        print('Warning: not enough colors, ignored detector {}'.format(list(dfa.columns[len(colors):])))
-    for col, c in zip(dfa.columns, colors):
+    for col, c in zip(plot_dets, COLORS):
         ax.fill_between(dfa.index, bottom, dfa[col].values + bottom, label=col, step='mid', color=c)
         bottom += dfa[col].values
+    # only plot Others if there are any
+    #if dfa[OTHERS_NAME].sum() > 0.:
+    #    ax.fill_between(dfa.index, bottom, dfa[OTHERS_NAME].values + bottom, label=OTHERS_NAME, step='mid', color=OTHERS_COLOR)
+
+    # formatting
     ax.tick_params(which='both', direction='in', labelsize=22)
     ax.set_xlabel('$\eta$', fontsize=22)
-    ax.set_ylabel('X0', fontsize=22)
-    # ax.xaxis.set_major_locator(MultipleLocator(0.5))
-    # ax.xaxis.set_minor_locator(MultipleLocator(0.1))
-    # ax.yaxis.set_major_locator(MultipleLocator(10))
-    # ax.yaxis.set_minor_locator(MultipleLocator(5))
+    ax.set_ylabel('{} ($R_{{xy}} \leq {:.1f}$ cm)'.format(vt[1], args.path_r), fontsize=22)
+    ax.xaxis.set_major_locator(MultipleLocator(0.5))
+    ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+    ax.yaxis.set_major_locator(MultipleLocator(vt[2]))
+    ax.yaxis.set_minor_locator(MultipleLocator(vt[3]))
     ax.grid(ls=':', which='both')
     ax.set_axisbelow(False)
-    # ax.set_xlim(-2.2, 1.8)
+    ax.set_xlim(args.eta_min, args.eta_max)
     ax.set_ylim(0., ax.get_ylim()[1]*1.1)
-    ax.legend(bbox_to_anchor=(0.0, 0.9, 1.0, 0.1), ncol=6, loc="upper center", fontsize=22,
+    ax.legend(bbox_to_anchor=(0.0, 0.9, 1.0, 0.1), ncol=4, loc="upper center", fontsize=22,
           borderpad=0.2, labelspacing=0.2, columnspacing=0.6, borderaxespad=0.05, handletextpad=0.4)
     # ax.set_yscale('log')
     fig.savefig('material_scan.png')
     pdf.savefig(fig)
+    plt.close(fig)
 
-
+    # detailed plot for each detector
     for j, det in enumerate(dets):
-        mats = det_mats[det]
-        dfa = pd.DataFrame(data=vals[:, j, 1:len(mats)+1], columns=mats, index=etas)
-        if len(dfa.columns) > len(colors):
-            print('Warning: not enough colors, ignored materials {} for detector {}'.format(list(dfa.columns[len(colors):]), det))
+        dmats = det_mats[det]
+        dfa = pd.DataFrame(data=vals[:, j, 1:len(dmats)+1], columns=dmats, index=etas)
+        if not len(dmats):
+            print('No material found for detector {} in this scan, skipped it.'.format(det))
+            continue
+        # sort columns by the total thickness (over eta range)
+        mats = [d for d in dfa.sum().sort_values(ascending=False).index]
+        dfa = dfa[mats]
+        plot_mats = mats
+        if len(mats) > len(COLORS):
+            group_mats = mats[len(COLORS):]
+            dfa.loc[:, OTHERS_NAME] = dfa.loc[:, group_mats].sum(axis=1)
+            print('For detector {}, materials {} are grouped into {} due to limited number of colors.'.format(det, group_mats, OTHERS_NAME))
+            plot_mats = mats[:len(COLORS)]
 
-        fig, ax = plt.subplots(figsize=(16, 6), dpi=160,
-                           gridspec_kw={'top': 0.8, 'bottom': 0.2, 'left': 0.08, 'right': 0.98})
+        fig, ax = plt.subplots(figsize=(16, 8), dpi=160,
+                           gridspec_kw={'top': 0.9, 'bottom': 0.2, 'left': 0.08, 'right': 0.98})
         bottom = np.zeros(len(dfa))
         width = np.mean(np.diff(dfa.index))
-        for col, c in zip(dfa.columns, colors):
+        for col, c in zip(plot_mats, COLORS):
             ax.fill_between(dfa.index, bottom, dfa[col].values + bottom, label=col, step='mid', color=c)
             bottom += dfa[col].values
-        ax.legend(bbox_to_anchor=(0.06, 1.02, 0.9, 0.1), ncol=5, loc="upper left", fontsize=18,
+        if OTHERS_NAME in dfa.columns and dfa[OTHERS_NAME].sum() > 0.:
+            ax.fill_between(dfa.index, bottom, dfa[OTHERS_NAME].values + bottom, label=OTHERS_NAME, step='mid', color=OTHERS_COLOR)
+
+        ax.legend(bbox_to_anchor=(0.0, 0.9, 1.0, 0.1), ncol=6, loc="upper left", fontsize=18,
                   borderpad=0.3, labelspacing=0.2, columnspacing=0.8, borderaxespad=0.1, handletextpad=0.4)
         ax.tick_params(which='both', direction='in', labelsize=22)
         ax.set_xlabel('$\eta$', fontsize=22)
-        ax.set_ylabel('X0', fontsize=22)
-        # ax.xaxis.set_major_locator(MultipleLocator(0.5))
-        # ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+        ax.set_ylabel('{} ($R_{{xy}} \leq {:.1f}$ cm)'.format(vt[1], args.path_r), fontsize=22)
+        ax.set_title(det, fontsize=22)
+        ax.xaxis.set_major_locator(MultipleLocator(0.5))
+        ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+        ax.yaxis.set_major_locator(MultipleLocator(vt[2]))
+        ax.yaxis.set_minor_locator(MultipleLocator(vt[3]))
         ax.grid(ls=':', which='both')
         ax.set_axisbelow(False)
-        # ax.set_xlim(-2.2, 1.8)
+        ax.set_xlim(args.eta_min, args.eta_max)
         ax.set_ylim(0., ax.get_ylim()[1]*1.1)
-        # ax.set_yscale('log')
         pdf.savefig(fig)
+        plt.close(fig)
+    # close PDF
     pdf.close()

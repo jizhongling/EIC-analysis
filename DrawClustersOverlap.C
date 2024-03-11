@@ -17,7 +17,7 @@ void DrawClustersOverlap(const char *particle = "gamma")
 
   const Color_t main_color[3] = {kRed, kGreen, kBlue};
 
-  auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg-overlap.root", particle, theta_min, theta_max));
+  auto f = new TFile(Form("results/clus_%s_theta_%g_%gdeg-overlap-craterlake.root", particle, theta_min, theta_max));
 
   auto c_fit = new TCanvas("c_fit", "c_fit", 4*600, 4*600);
   c_fit->Divide(4, 4);
@@ -37,7 +37,7 @@ void DrawClustersOverlap(const char *particle = "gamma")
 
   for(Int_t it = 0; it < ntype; it++)
   {
-    c_fit->Print(Form("results/clusters-fit-%s.pdf[", clus_name[it]));
+    c_fit->Print(Form("results/clusters-fit-craterlake-%s.pdf[", clus_name[it]));
     for(auto energy : v_energy)
     {
       string energy_str(Form("%g%s", energy < 1 ? energy*1e3 : energy, energy < 1 ? "MeV" : "GeV"));
@@ -85,10 +85,10 @@ void DrawClustersOverlap(const char *particle = "gamma")
           ig_eta[it]++;
         }
       } // theta
-      c_fit->Print(Form("results/clusters-fit-%s.pdf", clus_name[it]));
+      c_fit->Print(Form("results/clusters-fit-craterlake-%s.pdf", clus_name[it]));
       c_fit->Clear("D");
     } // energy
-    c_fit->Print(Form("results/clusters-fit-%s.pdf]", clus_name[it]));
+    c_fit->Print(Form("results/clusters-fit-craterlake-%s.pdf]", clus_name[it]));
   } // type
 
   for(Int_t it = 0; it < ntype; it++)
@@ -124,7 +124,7 @@ void DrawClustersOverlap(const char *particle = "gamma")
       if(ith == 4) leg_entry->SetTextColor(kRed);
     }
     leg_res->Draw();
-    c_res->Print(Form("results/clusters-res-%s.pdf", clus_name[it]));
+    c_res->Print(Form("results/clusters-res-craterlake-%s.pdf", clus_name[it]));
     c_res->Clear("D");
   }
 
@@ -145,5 +145,5 @@ void DrawClustersOverlap(const char *particle = "gamma")
     leg_eta->AddEntry(g_eta[it], clus_name[it], "P");
   }
   leg_eta->Draw();
-  c_eta->Print("results/clusters-eta-overlap.pdf");
+  c_eta->Print("results/clusters-eta-overlap-craterlake.pdf");
 }
