@@ -24,7 +24,7 @@ void AnaClusters(const Int_t proc, const char *particle)
         if(id < ndet || it == 0)
           h2_edep[id][it] = new TH2F(
               Form("h2_edep_%s%s_%s", det_name[id], clus_name[it], energy_str.c_str()),
-              Form("%s; E [GeV]", energy_str.c_str()),
+              Form("%s;E [GeV];#theta", energy_str.c_str()),
               200, energy*0., energy*2.,
               static_cast<Int_t>(theta_max - theta_min), theta_min, theta_max);
 

@@ -7,6 +7,8 @@
     alignment to transform world coordinates to local coordiantes, and then assigns the materials to a detector based
     on TGeoVolume::Contains
     Take a grain of salt about the materials->detector assignment, especially when the detector geometry is very complex
+
+    python3 material_scan.py --eta-min 0 --eta-max 2 --eta-nbins 1001 --detectors "EcalBarrelScFi,EcalEndcapP,EcalBarrelImaging,SolenoidBarrel,SolenoidEndcapP,DRICH,BeamPipe,InnerTrackerSupport" $DETECTOR_PATH/epic_craterlake.xml
 '''
 
 import os
@@ -31,7 +33,7 @@ pd.set_option('display.max_rows', 1000)
 PROGRESS_STEP = 10
 OTHERS_NAME = 'Others'
 # maximum number of detectors/materials to plot
-COLORS = ['royalblue', 'indianred', 'forestgreen', 'gold', 'darkviolet', 'orange', 'darkturquoise']
+COLORS = ['royalblue', 'indianred', 'forestgreen', 'gold', 'darkviolet', 'orange', 'darkturquoise', 'black']
 # a specified color for Others, this should not be included in COLORS
 OTHERS_COLOR = 'silver'
 
