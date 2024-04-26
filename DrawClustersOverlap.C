@@ -11,6 +11,7 @@ void DrawClustersOverlap(const char *particle = "gamma")
 
   const Int_t ntype = 3;
   const char *clus_name[ntype] = {"EcalSum", "EcalBarrelScFi", "EcalEndcapP"};
+  const char *leg_name[ntype] = {"EcalSum", "EcalBarrelScFi", "fEMCal"};
 
   const Int_t nth = 16;
   const Int_t dth = 1;
@@ -49,7 +50,7 @@ void DrawClustersOverlap(const char *particle = "gamma")
         c_fit->cd(ipad++);
         gStyle->SetOptFit(1111);
         TH1 *h_edep = h2_edep->ProjectionX(Form("h_edep_%d_%d", it, ith), ith*dth+1, (ith+1)*dth);
-        h_edep->SetTitle(Form("%s %s: %.2f--%.2f", clus_name[it], energy_str.c_str(), theta2eta(theta_min+ith*dth), theta2eta(theta_min+(ith+1)*dth)));
+        h_edep->SetTitle(Form("%s %s: %.2f--%.2f", leg_name[it], energy_str.c_str(), theta2eta(theta_min+ith*dth), theta2eta(theta_min+(ith+1)*dth)));
         auto f_gaus = new TF1("f_gaus", "gaus", energy*0.4, energy*1.6);
         f_gaus->SetParameter(0, h_edep->GetMaximum());
         f_gaus->SetParameter(1, energy);
@@ -143,7 +144,7 @@ void DrawClustersOverlap(const char *particle = "gamma")
     g_eta[it]->SetMarkerSize(1.6);
     g_eta[it]->Draw(index==0 ? "AP" : "P");
     index++;
-    leg_eta->AddEntry(g_eta[it], clus_name[it], "P");
+    leg_eta->AddEntry(g_eta[it], leg_name[it], "P");
   }
   leg_eta->Draw();
   c_eta->Print("results/clusters-eta-overlap-craterlake.pdf");
