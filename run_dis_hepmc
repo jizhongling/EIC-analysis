@@ -3,7 +3,7 @@
 set -o errexit
 
 # Setup environment
-export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
+export DETECTOR_PATH=$EIC_SHELL_PREFIX/share/epic
 export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
 #export JANA_HOME=$EIC_SHELL_PREFIX
 #export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
@@ -29,7 +29,7 @@ OUTDIR=${_CONDOR_SCRATCH_DIR}
 mkdir -p ${OUTDIR} ${WRKDIR}
 
 # Output file names
-compact_file=${DETECTOR_PATH}/epic_pecal.xml
+compact_file=${DETECTOR_PATH}/epic_craterlake_forward.xml
 info_string="pythia8NCDIS_${eElectron}x${eProton}_minQ2_${Q2min}-$j"
 hepmc_file="${WRKDIR}/gen_${info_string}.hepmc"
 abconv_file="${WRKDIR}/abc_${info_string}.hepmc"
@@ -63,9 +63,6 @@ eicrecon -Pjana:debug_plugin_loading=1 \
          -Pecalendcappclusterwithassoc:loglevel="info" \
          -Plfhcalclusterwithassoc:loglevel="info" \
          -P:reconstructedparticleswithassoc:loglevel="info" \
-         -PFEMC:EcalEndcapPRawHits:energyResolutions="0.00340,0.0009,0" \
-         -PFEMC:EcalEndcapPRawHits:capacityADC="1048576" \
-         -PFEMC:EcalEndcapPRecHits:capacityADC="1048576" \
          -Ppodio:output_file=${rec_file_no_ext}.tree.edm4eic.root \
          -Phistsfile=${rec_file_no_ext}.ana.root \
          ${sim_file}

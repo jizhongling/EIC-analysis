@@ -3,7 +3,7 @@
 set -o errexit
 
 # Setup environment
-export DETECTOR_PATH=$EIC_SHELL_PREFIX/../epic
+export DETECTOR_PATH=$EIC_SHELL_PREFIX/share/epic
 export BEAMLINE_PATH=$EIC_SHELL_PREFIX/../ip6
 #export JANA_HOME=$EIC_SHELL_PREFIX
 #export JANA_PLUGIN_PATH=$EIC_SHELL_PREFIX/lib/EICrecon/plugins
