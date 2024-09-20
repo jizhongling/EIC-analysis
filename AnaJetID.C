@@ -24,9 +24,10 @@ void AnaJetID(const Int_t proc)
   t_out->Branch("cst_px", (Float_t*)cst_mom[0], Form("cst_px[%d]/F", max_cst));
   t_out->Branch("cst_py", (Float_t*)cst_mom[1], Form("cst_py[%d]/F", max_cst));
   t_out->Branch("cst_pz", (Float_t*)cst_mom[2], Form("cst_pz[%d]/F", max_cst));
-  t_out->Branch("cst_track", (Float_t*)cst_mom[0], Form("cst_track[%d]/F", max_cst));
-  t_out->Branch("cst_ecal", (Float_t*)cst_mom[1], Form("cst_ecal[%d]/F", max_cst));
-  t_out->Branch("cst_hcal", (Float_t*)cst_mom[2], Form("cst_hcal[%d]/F", max_cst));
+  t_out->Branch("cst_energy", (Float_t*)cst_mom[3], Form("cst_energy[%d]/F", max_cst));
+  t_out->Branch("cst_track", (Float_t*)cst_energy[0], Form("cst_track[%d]/F", max_cst));
+  t_out->Branch("cst_ecal", (Float_t*)cst_energy[1], Form("cst_ecal[%d]/F", max_cst));
+  t_out->Branch("cst_hcal", (Float_t*)cst_energy[2], Form("cst_hcal[%d]/F", max_cst));
 
   for(auto eBeam : v_eBeam)
   {
@@ -40,100 +41,112 @@ void AnaJetID(const Int_t proc)
     }
     cout << "Opening " << file_name << endl;
 
-    const Int_t ntrack = 10000;
-    const Int_t ntype = 2;
-    const char *type_name[ntype] = {"MCParticles", "ReconstructedJets"};
-    Int_t pid[ntype][ntrack], status[ntype][ntrack];
-    Float_t mom[ntype][4][ntrack], energy_ref[ntype][3][ntrack], mass[ntype][ntrack];
+    auto v_mc = new vector<edm4hep::MCParticleData>;
+    auto v_jet = new vector<edm4eic::ReconstructedParticleData>;
+    auto v_cst = new vector<podio::ObjectID>;
+    auto v_rec = new vector<edm4eic::ReconstructedParticleData>;
+    auto v_clus = new vector<podio::ObjectID>;
+    auto v_ecal = new vector<edm4eic::ClusterData>;
+
+    const UInt_t vsize = 1024;
+    v_mc->reserve(vsize);
+    v_jet->reserve(vsize);
+    v_cst->reserve(vsize);
+    v_rec->reserve(vsize);
+    v_clus->reserve(vsize);
+    v_ecal->reserve(vsize);
 
     auto events = (TTree*)data_file->Get("events");
-    for(Int_t it = 0; it < ntype; it++)
-    {
-      events->SetBranchAddress(Form("%s.PDG", type_name[it]), (Int_t*)pid[it]);
-      events->SetBranchAddress(Form("%s.%s", type_name[it], it==0?"generatorStatus":"type"), (Int_t*)status[it]);
-      events->SetBranchAddress(Form("%s.momentum.x", type_name[it]), (Float_t*)mom[it][0]);
-      events->SetBranchAddress(Form("%s.momentum.y", type_name[it]), (Float_t*)mom[it][1]);
-      events->SetBranchAddress(Form("%s.momentum.z", type_name[it]), (Float_t*)mom[it][2]);
-
-      if(it == 1)
-      {
-        events->SetBranchAddress(Form("%s.energy", type_name[it]), (Float_t*)mom[it][3]);
-        events->SetBranchAddress(Form("%s.mass", type_name[it]), (Float_t*)mass[it]);
-        events->SetBranchAddress(Form("%s.referencePoint.x", type_name[it]), (Float_t*)energy_ref[it][0]);
-        events->SetBranchAddress(Form("%s.referencePoint.y", type_name[it]), (Float_t*)energy_ref[it][1]);
-        events->SetBranchAddress(Form("%s.referencePoint.z", type_name[it]), (Float_t*)energy_ref[it][2]);
-      }
-    }
+    events->SetBranchAddress("MCParticles", &v_mc);
+    events->SetBranchAddress("ReconstructedJets", &v_jet);
+    events->SetBranchAddress("_ReconstructedJets_particles", &v_cst);
+    events->SetBranchAddress("ReconstructedParticles", &v_rec);
+    events->SetBranchAddress("_ReconstructedParticles_clusters", &v_clus);
+    events->SetBranchAddress("EcalEndcapPClusters", &v_ecal);
 
     for(Long64_t iEvent = 0; iEvent < events->GetEntries(); iEvent++)
     {
+      v_mc->clear();
+      v_jet->clear();
+      v_cst->clear();
+      v_rec->clear();
+      v_clus->clear();
+      v_ecal->clear();
       events->GetEntry(iEvent);
 
       TVector3 v3_mc;
-      for(Int_t j = 0; j < events->GetLeaf(Form("%s.PDG", type_name[0]))->GetLen(); j++)
+      for(UInt_t j = 0; j < v_mc->size(); j++)
       {
-        if(status[0][j] == 0) break;
-        if(abs(pid[0][j]) > 6 || status[0][j] != 23) continue;
-        mc_pid = pid[0][j];
-        v3_mc = TVector3(mom[0][0][j], mom[0][1][j], mom[0][2][j]);
+        Int_t pid = v_mc->at(j).PDG;
+        Int_t status = v_mc->at(j).generatorStatus;
+        Float_t px = v_mc->at(j).momentum.x;
+        Float_t py = v_mc->at(j).momentum.y;
+        Float_t pz = v_mc->at(j).momentum.z;
+        if(status == 0) break;
+        if(abs(pid) > 6 || status != 23) continue;
+        mc_pid = pid;
+        v3_mc = TVector3(px, py, pz);
         break;
-      } // leaf
+      }
 
-      for(Int_t it = 1; it < ntype; it++)
+      UInt_t ijet;
+      Float_t min_angle = 1e6;
+      bool has_jet = false;
+      for(UInt_t j = 0; j < v_jet->size(); j++)
       {
-        Int_t ic0 = -1;
-        Int_t ic1 = -1;
-        Int_t ncst = 0;
-        Float_t min_angle = 1e6;
-
-        for(Int_t j = 0; j < events->GetLeaf(Form("%s.PDG", type_name[it]))->GetLen(); j++)
+        Float_t px = v_jet->at(j).momentum.x;
+        Float_t py = v_jet->at(j).momentum.y;
+        Float_t pz = v_jet->at(j).momentum.z;
+        Float_t en = v_jet->at(j).energy;
+        Float_t mass = v_jet->at(j).mass;
+        TVector3 v3_jet(px, py, pz);
+        Float_t this_angle = v3_jet.Angle(v3_mc);
+        if(en > energy_cut && this_angle < min_angle)
         {
-          // status = 1 means jet constituents
-          if(status[it][j] == 1)
-          {
-            ncst++;
-          } // status = 1
+          jet_mom[0] = px;
+          jet_mom[1] = py;
+          jet_mom[2] = pz;
+          jet_mom[3] = en;
+          jet_mass = mass;
+          min_angle = this_angle;
+          ijet = j;
+          has_jet = true;
+        } // matched jet
+      }
+      if(!has_jet) continue;
 
-          // status = 0 means jet
-          else if(status[it][j] == 0)
-          {
-            TVector3 v3_jet(mom[it][0][j], mom[it][1][j], mom[it][2][j]);
-            Float_t this_angle = v3_jet.Angle(v3_mc);
-            if(mom[it][3][j] > energy_cut && this_angle < min_angle)
-            {
-              jet_mom[0] = mom[it][0][j];
-              jet_mom[1] = mom[it][1][j];
-              jet_mom[2] = mom[it][2][j];
-              jet_mom[3] = mom[it][3][j];
-              jet_mass = mass[it][j];
-              min_angle = this_angle;
-              ic0 = j - ncst;
-              ic1 = j;
-            } // matched jet
-            ncst = 0;
-          } // status = 0
-        } // leaf
-
-        if(ic0 < 0 || ic1 < 0) continue;
-
-        for(Int_t j = ic0; j < ic1; j++)
+      Int_t ic = 0;
+      for(UInt_t j = v_jet->at(ijet).particles_begin; j < v_jet->at(ijet).particles_end; j++)
+        if(ic < max_cst)
         {
-          Int_t ic = j - ic0;
-          // status = 1 mean jet constituents
-          if(status[it][j] == 1 && ic  < max_cst)
+          UInt_t irec = v_cst->at(j).index;
+          cst_mom[0][ic] = v_rec->at(irec).momentum.x;
+          cst_mom[1][ic] = v_rec->at(irec).momentum.y;
+          cst_mom[2][ic] = v_rec->at(irec).momentum.z;
+          cst_mom[3][ic] = v_rec->at(irec).energy;
+          cst_energy[0][ic] = 0;
+          cst_energy[1][ic] = 0;
+          cst_energy[2][ic] = 0;
+          for(UInt_t k = v_rec->at(irec).clusters_begin; k < v_rec->at(irec).clusters_end; k++)
           {
-            cst_mom[0][ic] = mom[it][0][j];
-            cst_mom[1][ic] = mom[it][1][j];
-            cst_mom[2][ic] = mom[it][2][j];
-            cst_mom[3][ic] = mom[it][3][j];
-            cst_energy[0][ic] = energy_ref[it][0][j];
-            cst_energy[1][ic] = energy_ref[it][1][j];
-            cst_energy[2][ic] = energy_ref[it][2][j];
-          } // status = 1
-        } // leaf
+            UInt_t iclus = v_clus->at(k).index;
+            cst_energy[1][ic] += v_ecal->at(iclus).energy;
+          }
+          ic++;
+        }
+      while(ic < max_cst)
+      {
+        cst_mom[0][ic] = 0;
+        cst_mom[1][ic] = 0;
+        cst_mom[2][ic] = 0;
+        cst_mom[3][ic] = 0;
+        cst_energy[0][ic] = 0;
+        cst_energy[1][ic] = 0;
+        cst_energy[2][ic] = 0;
+        ic++;
+      }
 
-        t_out->Fill();
-      } // type
+      t_out->Fill();
     } // event
 
     data_file->Close();
